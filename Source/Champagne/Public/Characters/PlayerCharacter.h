@@ -45,6 +45,7 @@ protected:
 	UInputAction* JumpAction;
 
 	void Move(const FInputActionValue& Value);
+	void MoveEnd(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
 private:	
@@ -53,4 +54,5 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	UCameraComponent* Camera;
+
 };
