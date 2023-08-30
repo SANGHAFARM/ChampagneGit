@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Math/UnrealMathUtility.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -20,7 +21,7 @@ APlayerCharacter::APlayerCharacter()
 	SpringArm->TargetArmLength = 200.f;
 	SpringArm->bUsePawnControlRotation = true;
 	SpringArm->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
-	SpringArm->SocketOffset.Y = 80.f;
+	SpringArm->SocketOffset.Y = 100.f;
 
 	// 캐릭터 카메라 생성 및 스프링 암에 부착
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -39,7 +40,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
+	CameraInterpZoom(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -53,6 +54,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APlayerCharacter::MoveEnd);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
+
+		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Ongoing, this, &APlayerCharacter::AimingButtonPressed);
+		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &APlayerCharacter::AimingButtonReleased);
 	}
 }
 
@@ -69,6 +73,12 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(PlayerMappingContext, 0);
 		}
 	}
+
+	if (Camera)
+	{
+		CameraDefaultFOV = Camera->FieldOfView;
+		CameraCurrentFOV = CameraDefaultFOV;
+	}	
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -108,5 +118,34 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+void APlayerCharacter::AimingButtonPressed()
+{
+	if (Camera)
+	{
+		bAiming = true;
+	}	
+}
 
+void APlayerCharacter::AimingButtonReleased()
+{
+	if (Camera)
+	{
+		bAiming = false;
+	}	
+}
+
+void APlayerCharacter::CameraInterpZoom(float DeltaTime)
+{
+	if (bAiming)
+	{
+		CameraCurrentFOV = FMath::InterpExpoIn(CameraCurrentFOV, CameraZoomedFOV, 0.5f);
+		//CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraZoomedFOV, DeltaTime, ZoomInterpSpeed);
+		GetCamera()->SetFieldOfView(CameraCurrentFOV);
+	}
+	else
+	{
+		CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraDefaultFOV, DeltaTime, ZoomInterpSpeed);
+		GetCamera()->SetFieldOfView(CameraCurrentFOV);
+	}
+}
 

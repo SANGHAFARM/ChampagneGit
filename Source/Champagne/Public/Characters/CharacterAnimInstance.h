@@ -28,15 +28,19 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UCharacterMovementComponent* PlayerCharacterMovement;
 
+	/** 캐릭터 이동 속도 */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float GroundSpeed;
 
+	/** 정면 X축 기준, 캐릭터가 이동할 방향 */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	float Angle;
+	float MoveDirection;
 
+	/** 캐릭터가 공중에 있음 */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool IsFalling;
 
+	/** 카메라 기준 Pitch */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	float MovementOffsetYaw;
+	float Pitch;
 };

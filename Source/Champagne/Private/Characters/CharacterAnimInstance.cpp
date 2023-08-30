@@ -35,6 +35,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		//MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
 
 		FVector Direction = UKismetMathLibrary::InverseTransformDirection(PlayerCharacter->GetActorTransform(), PlayerCharacter->GetVelocity());
-		Angle = UKismetMathLibrary::MakeRotFromX(Direction).Yaw;
+		MoveDirection = UKismetMathLibrary::MakeRotFromX(Direction).Yaw;
+		Pitch = PlayerCharacter->GetBaseAimRotation().Pitch;
 	}	
 }
