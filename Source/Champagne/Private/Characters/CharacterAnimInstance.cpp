@@ -30,12 +30,32 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (PlayerCharacter)
 	{
-		//FRotator AimRotation = PlayerCharacter->GetBaseAimRotation();
-		//FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(PlayerCharacter->GetVelocity());
-		//MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
+		// 캐릭터가 현재 바라보는 방향의 회전
+		FRotator AimRotation = PlayerCharacter->GetBaseAimRotation();
 
-		FVector Direction = UKismetMathLibrary::InverseTransformDirection(PlayerCharacter->GetActorTransform(), PlayerCharacter->GetVelocity());
-		MoveDirection = UKismetMathLibrary::MakeRotFromX(Direction).Yaw;
-		Pitch = PlayerCharacter->GetBaseAimRotation().Pitch;
+		// 캐릭터가 현재 이동중인 방향의 회전
+		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(PlayerCharacter->GetVelocity());
+
+		// 캐릭터가 이동중인 방향 회전과 캐릭터가 바라보는 방향 회전의 차이값의 Yaw를 통해
+		// 캐릭터가 현재 바라보는 방향의 회전 0도를 기준으로, 이동하려는 회전값을 지정
+		MoveDirection = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
+		Pitch = AimRotation.Pitch;
+
+		// 대시 방향 지정
+		PlayerCharacter->SetDashDirection(MovementRotation.Vector());
+
+
+
+
+
+
+
+
+		//FVector Direction = UKismetMathLibrary::InverseTransformDirection(PlayerCharacter->GetActorTransform(), PlayerCharacter->GetVelocity());
+		//MoveDirection = UKismetMathLibrary::MakeRotFromX(Direction).Yaw;		
+		
+
+		//FVector MoveDirection = (UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->Velocity)).Vector();
+		//DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f);		
 	}	
 }

@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Math/UnrealMathUtility.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -33,6 +34,11 @@ APlayerCharacter::APlayerCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationYaw = false;
+
+	DashEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DashEffect"));
+	DashEffect->SetupAttachment(GetRootComponent());
+	DashEffect->bAutoActivate = false;
+	
 }
 
 // Called every frame
@@ -41,6 +47,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	CameraInterpZoom(DeltaTime);
+
+	//FVector MoveDirection = (UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->Velocity)).Vector();
+	//DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f);
 }
 
 // Called to bind functionality to input
@@ -54,6 +63,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APlayerCharacter::MoveEnd);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Dash);
 
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Ongoing, this, &APlayerCharacter::AimingButtonPressed);
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &APlayerCharacter::AimingButtonReleased);
@@ -99,9 +109,9 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-void APlayerCharacter::MoveEnd(const FInputActionValue& Value)
+void APlayerCharacter::MoveEnd()
 {
-	if (Controller != nullptr)
+	if (Controller)
 	{
 		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}
@@ -111,11 +121,22 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookAxisValue = Value.Get<FVector2D>();
 	
-	if (Controller != nullptr)
+	if (Controller)
 	{
 		AddControllerYawInput(LookAxisValue.X);
 		AddControllerPitchInput(LookAxisValue.Y);
 	}
+}
+
+void APlayerCharacter::Dash()
+{
+	if (DashEffect)
+	{
+		DashEffect->Activate();
+		GetWorldTimerManager().SetTimer(DashEffectTimer, this, &APlayerCharacter::DashEffectTimerFinished, 0.15f);						
+	}	
+
+	LaunchCharacter(DashDirection * DashDistance, true, false);
 }
 
 void APlayerCharacter::AimingButtonPressed()
@@ -137,7 +158,7 @@ void APlayerCharacter::AimingButtonReleased()
 void APlayerCharacter::CameraInterpZoom(float DeltaTime)
 {
 	if (bAiming)
-	{
+	{		
 		CameraCurrentFOV = FMath::InterpExpoIn(CameraCurrentFOV, CameraZoomedFOV, 0.5f);
 		//CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraZoomedFOV, DeltaTime, ZoomInterpSpeed);
 		GetCamera()->SetFieldOfView(CameraCurrentFOV);
@@ -146,6 +167,14 @@ void APlayerCharacter::CameraInterpZoom(float DeltaTime)
 	{
 		CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraDefaultFOV, DeltaTime, ZoomInterpSpeed);
 		GetCamera()->SetFieldOfView(CameraCurrentFOV);
+	}
+}
+
+void APlayerCharacter::DashEffectTimerFinished()
+{
+	if (DashEffect)
+	{
+		DashEffect->Deactivate();
 	}
 }
 

@@ -11,6 +11,7 @@ class UInputMappingContext;
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
+class UNiagaraComponent;
 
 
 UCLASS()
@@ -27,6 +28,8 @@ public:
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void CharacterMoveDirection();
 
 protected:
 	// Called when the game starts or when spawned
@@ -46,12 +49,16 @@ protected:
 	UInputAction* JumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* DashAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* Aiming;
 	/** </Enhanced Input> */
 
 	void Move(const FInputActionValue& Value);
-	void MoveEnd(const FInputActionValue& Value);
+	void MoveEnd();
 	void Look(const FInputActionValue& Value);
+	void Dash();
 
 	/** Aiming 버튼 입력에 따라 bAiming을 true 또는 false로 변경 */
 	void AimingButtonPressed();
@@ -85,6 +92,22 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	bool bAiming = false;
 
+	UPROPERTY(VisibleAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	FVector DashDirection;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float DashDistance = 500.f;
+
+	UPROPERTY(EditAnywhere, Category = Effect)
+	UNiagaraComponent* DashEffect;
+
+	FTimerHandle DashEffectTimer;
+
+	void DashEffectTimerFinished();
+
+	float DashEffectTime = 0.5f;
+
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
+	FORCEINLINE void SetDashDirection(FVector MoveDirection) { DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f); }	
 };
