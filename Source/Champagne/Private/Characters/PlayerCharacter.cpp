@@ -133,7 +133,7 @@ void APlayerCharacter::Dash()
 	if (DashEffect)
 	{
 		DashEffect->Activate();
-		GetWorldTimerManager().SetTimer(DashEffectTimer, this, &APlayerCharacter::DashEffectTimerFinished, 0.15f);						
+		GetWorldTimerManager().SetTimer(DashEffectTimer, this, &APlayerCharacter::DashEffectTimerFinished, 0.08f);						
 	}	
 
 	LaunchCharacter(DashDirection * DashDistance, true, false);
@@ -144,6 +144,7 @@ void APlayerCharacter::AimingButtonPressed()
 	if (Camera)
 	{
 		bAiming = true;
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	}	
 }
 
@@ -152,6 +153,11 @@ void APlayerCharacter::AimingButtonReleased()
 	if (Camera)
 	{
 		bAiming = false;
+
+		if (GetCharacterMovement()->Velocity.Size() <= 0)
+		{
+			GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		}		
 	}	
 }
 

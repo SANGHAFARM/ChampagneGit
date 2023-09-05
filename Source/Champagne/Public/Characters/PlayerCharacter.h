@@ -29,7 +29,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void CharacterMoveDirection();
 
 protected:
 	// Called when the game starts or when spawned
@@ -109,5 +108,7 @@ private:
 
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
-	FORCEINLINE void SetDashDirection(FVector MoveDirection) { DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f); }	
+	FORCEINLINE bool GetAiming() const { return bAiming; }
+
+	FORCEINLINE void SetDashDirection(const FVector MoveDirection) { DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f); }	
 };

@@ -44,10 +44,9 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		// 대시 방향 지정
 		PlayerCharacter->SetDashDirection(MovementRotation.Vector());
 
+		bAiming = PlayerCharacter->GetAiming();
 
-
-
-
+		TurnInPlace();
 
 
 
@@ -58,4 +57,18 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		//FVector MoveDirection = (UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->Velocity)).Vector();
 		//DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f);		
 	}	
+}
+
+void UCharacterAnimInstance::TurnInPlace()
+{
+	if (PlayerCharacter == nullptr) return;
+
+	if (GroundSpeed <= 0 && bAiming)
+	{
+		CharacterYawLastFrame = CharacterYaw;
+		CharacterYaw = PlayerCharacter->GetActorRotation().Yaw;
+		const float YawDelta{ CharacterYaw - CharacterYawLastFrame };
+
+		RootYawOffset = UKismetMathLibrary::NormalizeAxis(RootYawOffset - YawDelta);
+	}
 }
