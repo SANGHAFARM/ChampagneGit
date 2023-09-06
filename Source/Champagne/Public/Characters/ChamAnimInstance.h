@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "CharacterAnimInstance.generated.h"
+#include "ChamAnimInstance.generated.h"
 
 
-class APlayerCharacter;
+class AChamCharacter;
 class UCharacterMovementComponent;
 
 UCLASS()
-class CHAMPAGNE_API UCharacterAnimInstance : public UAnimInstance
+class CHAMPAGNE_API UChamAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
@@ -24,28 +24,28 @@ protected:
 
 private:
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	APlayerCharacter* PlayerCharacter;
+	AChamCharacter* PlayerCharacter;
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UCharacterMovementComponent* PlayerCharacterMovement;
 
-	/** ƒ≥∏Ø≈Õ ¿Ãµø º”µµ */
+	/** Ï∫êÎ¶≠ÌÑ∞ Ïù¥Îèô ÏÜçÎèÑ */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float GroundSpeed;
 
-	/** ¡§∏È X√‡ ±‚¡ÿ, ƒ≥∏Ø≈Õ∞° ¿Ãµø«“ πÊ«‚ */
+	/** Ï†ïÎ©¥ XÏ∂ï Í∏∞Ï§Ä, Ï∫êÎ¶≠ÌÑ∞Í∞Ä Ïù¥ÎèôÌï† Î∞©Ìñ• */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float MoveDirection;
 
-	/** ƒ≥∏Ø≈Õ∞° ∞¯¡ﬂø° ¿÷¿Ω */
+	/** Ï∫êÎ¶≠ÌÑ∞Í∞Ä Í≥µÏ§ëÏóê ÏûàÏùå */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool IsFalling;
 
-	/** ƒ´∏ﬁ∂Û ±‚¡ÿ Pitch */
+	/** Ïπ¥Î©îÎùº Í∏∞Ï§Ä Pitch */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float Pitch;
 
-	/** ƒ´∏ﬁ∂Û ±‚¡ÿ Pitch */
+	/** Ïπ¥Î©îÎùº Í∏∞Ï§Ä Pitch */
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float Yaw;
 
@@ -53,9 +53,9 @@ private:
 
 	float CharacterYawLastFrame = 0.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float RootYawOffset = 0.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bAiming = false;
 };

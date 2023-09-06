@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/PlayerCharacter.h"
+#include "Characters/ChamCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -11,22 +11,23 @@
 #include "NiagaraComponent.h"
 
 // Sets default values
-APlayerCharacter::APlayerCharacter()
+AChamCharacter::AChamCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Ä³¸¯ÅÍ ½ºÇÁ¸µ ¾Ï »ı¼º
+	// ìºë¦­í„° ìŠ¤í”„ë§ ì•” ìƒì„±
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
-	SpringArm->TargetArmLength = 200.f;
+	SpringArm->TargetArmLength = 300.f;
 	SpringArm->bUsePawnControlRotation = true;
 	SpringArm->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
 	SpringArm->SocketOffset.Y = 100.f;
 
-	// Ä³¸¯ÅÍ Ä«¸Ş¶ó »ı¼º ¹× ½ºÇÁ¸µ ¾Ï¿¡ ºÎÂø
+	// ìºë¦­í„° ì¹´ë©”ë¼ ìƒì„± ë° ìŠ¤í”„ë§ ì•”ì— ë¶€ì°©
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
+	Camera->FieldOfView = 90.f;
 	Camera->bUsePawnControlRotation = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -42,36 +43,43 @@ APlayerCharacter::APlayerCharacter()
 }
 
 // Called every frame
-void APlayerCharacter::Tick(float DeltaTime)
+void AChamCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// ì¡°ì¤€ ì‹œ ì¹´ë©”ë¼ í™•ëŒ€/ì¶•ì†Œ ì†ë„ ë³´ê°„
 	CameraInterpZoom(DeltaTime);
 
-	//FVector MoveDirection = (UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->Velocity)).Vector();
-	//DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f);
+	// í¬ë¡œìŠ¤í—¤ì–´ í¼ì§
+	CalculateCrosshairSpread(DeltaTime);
+
 }
 
 // Called to bind functionality to input
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APlayerCharacter::MoveEnd);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AChamCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AChamCharacter::MoveEnd);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AChamCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Dash);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AChamCharacter::Dash);
 
-		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Ongoing, this, &APlayerCharacter::AimingButtonPressed);
-		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &APlayerCharacter::AimingButtonReleased);
+		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Ongoing, this, &AChamCharacter::AimingButtonPressed);
+		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &AChamCharacter::AimingButtonReleased);
 	}
 }
 
+float AChamCharacter::GetCrosshairSpreadMultiplier() const
+{
+	return CrosshairSpreadMultiplier;
+}
+
 // Called when the game starts or when spawned
-void APlayerCharacter::BeginPlay()
+void AChamCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
@@ -91,7 +99,7 @@ void APlayerCharacter::BeginPlay()
 	}	
 }
 
-void APlayerCharacter::Move(const FInputActionValue& Value)
+void AChamCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D MoveVector = Value.Get<FVector2D>();
 
@@ -109,15 +117,15 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-void APlayerCharacter::MoveEnd()
+void AChamCharacter::MoveEnd()
 {
-	if (Controller)
+	if (Controller && bAiming == false)
 	{
 		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}
 }
 
-void APlayerCharacter::Look(const FInputActionValue& Value)
+void AChamCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookAxisValue = Value.Get<FVector2D>();
 	
@@ -128,18 +136,31 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void APlayerCharacter::Dash()
+void AChamCharacter::Dash()
 {
+	if (bCanDash == false) return;
+
+	bCanDash = false;
+	
 	if (DashEffect)
 	{
 		DashEffect->Activate();
-		GetWorldTimerManager().SetTimer(DashEffectTimer, this, &APlayerCharacter::DashEffectTimerFinished, 0.08f);						
-	}	
 
-	LaunchCharacter(DashDirection * DashDistance, true, false);
+		if (GetCharacterMovement()->IsFalling())
+		{
+			LaunchCharacter(DashDirection * AirDashDistance, true, false);
+		}
+		else
+		{
+			LaunchCharacter(DashDirection * GroundDashDistance, true, false);
+		}
+		
+		GetWorldTimerManager().SetTimer(DashEffectTimer, this, &AChamCharacter::DashEffectTimerFinished, 0.2f);						
+		GetWorldTimerManager().SetTimer(DashCoolTimer, this, &AChamCharacter::DashCoolTimerFinished, 2.f);
+	}	
 }
 
-void APlayerCharacter::AimingButtonPressed()
+void AChamCharacter::AimingButtonPressed()
 {
 	if (Camera)
 	{
@@ -148,7 +169,7 @@ void APlayerCharacter::AimingButtonPressed()
 	}	
 }
 
-void APlayerCharacter::AimingButtonReleased()
+void AChamCharacter::AimingButtonReleased()
 {
 	if (Camera)
 	{
@@ -161,7 +182,7 @@ void APlayerCharacter::AimingButtonReleased()
 	}	
 }
 
-void APlayerCharacter::CameraInterpZoom(float DeltaTime)
+void AChamCharacter::CameraInterpZoom(float DeltaTime)
 {
 	if (bAiming)
 	{		
@@ -176,11 +197,25 @@ void APlayerCharacter::CameraInterpZoom(float DeltaTime)
 	}
 }
 
-void APlayerCharacter::DashEffectTimerFinished()
+void AChamCharacter::CalculateCrosshairSpread(float DeltaTime)
 {
-	if (DashEffect)
-	{
-		DashEffect->Deactivate();
-	}
+	FVector2D WalkSpeedRange{ 0.f, 600.f };
+	FVector2D VelocityMultiplierRange{ 0.f, 1.f };
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+
+	CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
+
+	CrosshairSpreadMultiplier = 0.5f + CrosshairVelocityFactor;
+}
+
+void AChamCharacter::DashCoolTimerFinished()
+{
+	bCanDash = true;
+}
+
+void AChamCharacter::DashEffectTimerFinished()
+{
+	DashEffect->Deactivate();
 }
 

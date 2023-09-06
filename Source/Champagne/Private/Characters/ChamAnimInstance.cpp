@@ -1,16 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/CharacterAnimInstance.h"
-#include "Characters/PlayerCharacter.h"
+#include "Characters/ChamAnimInstance.h"
+#include "Characters/ChamCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-void UCharacterAnimInstance::NativeInitializeAnimation()
+void UChamAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
-	PlayerCharacter = Cast<APlayerCharacter>(TryGetPawnOwner());
+	PlayerCharacter = Cast<AChamCharacter>(TryGetPawnOwner());
 
 	if (PlayerCharacter)
 	{
@@ -18,7 +18,7 @@ void UCharacterAnimInstance::NativeInitializeAnimation()
 	}
 }
 
-void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+void UChamAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
@@ -30,19 +30,26 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (PlayerCharacter)
 	{
-		// Ä³¸¯ÅÍ°¡ ÇöÀç ¹Ù¶óº¸´Â ¹æÇâÀÇ È¸Àü
+		// ìºë¦­í„°ê°€ í˜„ìž¬ ë°”ë¼ë³´ëŠ” ë°©í–¥ì˜ íšŒì „
 		FRotator AimRotation = PlayerCharacter->GetBaseAimRotation();
 
-		// Ä³¸¯ÅÍ°¡ ÇöÀç ÀÌµ¿ÁßÀÎ ¹æÇâÀÇ È¸Àü
+		// ìºë¦­í„°ê°€ í˜„ìž¬ ì´ë™ì¤‘ì¸ ë°©í–¥ì˜ íšŒì „
 		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(PlayerCharacter->GetVelocity());
 
-		// Ä³¸¯ÅÍ°¡ ÀÌµ¿ÁßÀÎ ¹æÇâ È¸Àü°ú Ä³¸¯ÅÍ°¡ ¹Ù¶óº¸´Â ¹æÇâ È¸ÀüÀÇ Â÷ÀÌ°ªÀÇ Yaw¸¦ ÅëÇØ
-		// Ä³¸¯ÅÍ°¡ ÇöÀç ¹Ù¶óº¸´Â ¹æÇâÀÇ È¸Àü 0µµ¸¦ ±âÁØÀ¸·Î, ÀÌµ¿ÇÏ·Á´Â È¸Àü°ªÀ» ÁöÁ¤
+		// ìºë¦­í„°ê°€ ì´ë™ì¤‘ì¸ ë°©í–¥ íšŒì „ê³¼ ìºë¦­í„°ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥ íšŒì „ì˜ ì°¨ì´ê°’ì˜ Yawë¥¼ í†µí•´
+		// ìºë¦­í„°ê°€ í˜„ìž¬ ë°”ë¼ë³´ëŠ” ë°©í–¥ì˜ íšŒì „ 0ë„ë¥¼ ê¸°ì¤€ìœ¼ë¡œ, ì´ë™í•˜ë ¤ëŠ” íšŒì „ê°’ì„ ì§€ì •
 		MoveDirection = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
 		Pitch = AimRotation.Pitch;
 
-		// ´ë½Ã ¹æÇâ ÁöÁ¤
-		PlayerCharacter->SetDashDirection(MovementRotation.Vector());
+		// ëŒ€ì‹œ ë°©í–¥ ì§€ì •
+		if (GroundSpeed <= 0)
+		{
+			PlayerCharacter->SetDashDirection(PlayerCharacter->GetActorForwardVector());
+		}
+		else
+		{
+			PlayerCharacter->SetDashDirection(MovementRotation.Vector());
+		}		
 
 		bAiming = PlayerCharacter->GetAiming();
 
@@ -59,7 +66,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}	
 }
 
-void UCharacterAnimInstance::TurnInPlace()
+void UChamAnimInstance::TurnInPlace()
 {
 	if (PlayerCharacter == nullptr) return;
 

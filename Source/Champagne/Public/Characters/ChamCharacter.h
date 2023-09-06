@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "PlayerCharacter.generated.h"
+#include "ChamCharacter.generated.h"
 
 class UInputMappingContext;
 class UInputAction;
@@ -15,13 +15,13 @@ class UNiagaraComponent;
 
 
 UCLASS()
-class CHAMPAGNE_API APlayerCharacter : public ACharacter
+class CHAMPAGNE_API AChamCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
-	APlayerCharacter();
+	AChamCharacter();
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -29,6 +29,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable)
+	float GetCrosshairSpreadMultiplier() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -59,56 +61,83 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Dash();
 
-	/** Aiming ¹öÆ° ÀÔ·Â¿¡ µû¶ó bAimingÀ» true ¶Ç´Â false·Î º¯°æ */
+	/** Aiming ë²„íŠ¼ ì…ë ¥ì— ë”°ë¼ bAimingì„ true ë˜ëŠ” falseë¡œ ë³€ê²½ */
 	void AimingButtonPressed();
 	void AimingButtonReleased();
 
-	/** bAiming¿¡ µû¶ó Á¶ÁØ Ä«¸Ş¶ó ¼³Á¤ */
+	/** bAimingì— ë”°ë¼ ì¡°ì¤€ ì¹´ë©”ë¼ ì„¤ì • */
 	void CameraInterpZoom(float DeltaTime);
 
+	void CalculateCrosshairSpread(float DeltaTime);
+
 private:	
+	/** <Camera> */
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	USpringArmComponent* SpringArm;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	UCameraComponent* Camera;
 
-	/** ±âº» Ä«¸Ş¶ó ½Ã¾ß */
+	/** ê¸°ë³¸ê°’ ì¹´ë©”ë¼ ì‹œì•¼ */
 	float CameraDefaultFOV;
 
-	/** Á¶ÁØ ½Ã Ä«¸Ş¶ó ½Ã¾ß */
+	/** ì¡°ì¤€ ì‹œ ì¹´ë©”ë¼ ì‹œì•¼ */
 	UPROPERTY(EditAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	float CameraZoomedFOV = 60.f;
 
-	/** ÇöÀç Ä«¸Ş¶ó ½Ã¾ß */
+	/** í˜„ì¬ ì¹´ë©”ë¼ ì‹œì•¼ */
 	float CameraCurrentFOV;
 
-	/** Á¶ÁØ ½Ã Ä«¸Ş¶ó È®´ë ¼Óµµ */
+	/** ì¡°ì¤€ í•´ì œ ì‹œ ì¹´ë©”ë¼ ì¶•ì†Œ ì†ë„ */
 	UPROPERTY(EditAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	float ZoomInterpSpeed = 20.f;
 
-	/** Á¶ÁØ ¿©ºÎ */
+	/** ì¡°ì¤€ ì—¬ë¶€ */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	bool bAiming = false;
+	/** </Camera> */
 
+	/** <Dash> */
 	UPROPERTY(VisibleAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	FVector DashDirection;
 
 	UPROPERTY(EditDefaultsOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	float DashDistance = 500.f;
+	float GroundDashDistance = 5000.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float AirDashDistance = 1500.f;
+
+	bool bCanDash = true;
+
+	FTimerHandle DashCoolTimer;
+
+	void DashCoolTimerFinished();
 
 	UPROPERTY(EditAnywhere, Category = Effect)
 	UNiagaraComponent* DashEffect;
 
 	FTimerHandle DashEffectTimer;
+	
+	float DashEffectTime = 0.5f;
 
 	void DashEffectTimerFinished();
+	/** </Dash> */
 
-	float DashEffectTime = 0.5f;
+	/** í¬ë¡œìŠ¤í—¤ì–´ í¼ì§ ì •ë„ */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float CrosshairSpreadMultiplier;
+
+	float CrosshairVelocityFactor;
+
+	float CrosshairInAirFactor;
+
+	float CrosshairAimFactor;
+
+	float CrosshairShootFactor;
 
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 
-	FORCEINLINE void SetDashDirection(const FVector MoveDirection) { DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f); }	
+	FORCEINLINE void SetDashDirection(const FVector MoveDirection) { DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f); }
 };
