@@ -12,6 +12,9 @@ class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
 class UNiagaraComponent;
+class AChamHUD;
+class AChamPlayerController;
+class UTexture2D;
 
 
 UCLASS()
@@ -70,7 +73,11 @@ protected:
 
 	void CalculateCrosshairSpread(float DeltaTime);
 
+	void SetHUDCrosshairs(float DeltaTime);
+
 private:	
+	AChamPlayerController* ChamController;
+
 	/** <Camera> */
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	USpringArmComponent* SpringArm;
@@ -104,9 +111,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float GroundDashDistance = 5000.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	float AirDashDistance = 1500.f;
-
 	bool bCanDash = true;
 
 	FTimerHandle DashCoolTimer;
@@ -123,7 +127,7 @@ private:
 	void DashEffectTimerFinished();
 	/** </Dash> */
 
-	/** 크로스헤어 퍼짐 정도 */
+	/** <Crosshair> */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float CrosshairSpreadMultiplier;
 
@@ -134,6 +138,18 @@ private:
 	float CrosshairAimFactor;
 
 	float CrosshairShootFactor;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairCenter;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairLeft;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairRight;
+	/** </Crosshair> */
+
+	AChamHUD* HUD;
 
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }

@@ -2,6 +2,7 @@
 
 
 #include "Characters/ChamCharacter.h"
+#include "PlayerController/ChamPlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -9,6 +10,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "NiagaraComponent.h"
+#include "HUD/ChamHUD.h"
+#include "Engine/Texture2D.h"
+
 
 // Sets default values
 AChamCharacter::AChamCharacter()
@@ -39,6 +43,8 @@ AChamCharacter::AChamCharacter()
 	DashEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DashEffect"));
 	DashEffect->SetupAttachment(GetRootComponent());
 	DashEffect->bAutoActivate = false;
+
+	GetMesh()->bWaitForParallelClothTask = true;
 	
 }
 
@@ -50,8 +56,11 @@ void AChamCharacter::Tick(float DeltaTime)
 	// 조준 시 카메라 확대/축소 속도 보간
 	CameraInterpZoom(DeltaTime);
 
+	SetHUDCrosshairs(DeltaTime);
+
 	// 크로스헤어 퍼짐
-	CalculateCrosshairSpread(DeltaTime);
+	//CalculateCrosshairSpread(DeltaTime);
+
 
 }
 
@@ -83,10 +92,10 @@ void AChamCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
+	ChamController = Cast<AChamPlayerController>(GetController());
+	if (ChamController)
 	{		
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(ChamController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(PlayerMappingContext, 0);
 		}
@@ -138,7 +147,7 @@ void AChamCharacter::Look(const FInputActionValue& Value)
 
 void AChamCharacter::Dash()
 {
-	if (bCanDash == false) return;
+	if (bCanDash == false || GetCharacterMovement()->IsFalling()) return;
 
 	bCanDash = false;
 	
@@ -146,14 +155,7 @@ void AChamCharacter::Dash()
 	{
 		DashEffect->Activate();
 
-		if (GetCharacterMovement()->IsFalling())
-		{
-			LaunchCharacter(DashDirection * AirDashDistance, true, false);
-		}
-		else
-		{
-			LaunchCharacter(DashDirection * GroundDashDistance, true, false);
-		}
+		LaunchCharacter(DashDirection * GroundDashDistance, true, false);
 		
 		GetWorldTimerManager().SetTimer(DashEffectTimer, this, &AChamCharacter::DashEffectTimerFinished, 0.2f);						
 		GetWorldTimerManager().SetTimer(DashCoolTimer, this, &AChamCharacter::DashCoolTimerFinished, 2.f);
@@ -199,7 +201,7 @@ void AChamCharacter::CameraInterpZoom(float DeltaTime)
 
 void AChamCharacter::CalculateCrosshairSpread(float DeltaTime)
 {
-	FVector2D WalkSpeedRange{ 0.f, 600.f };
+	FVector2D WalkSpeedRange{ 0.f, GetCharacterMovement()->MaxWalkSpeed};
 	FVector2D VelocityMultiplierRange{ 0.f, 1.f };
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
@@ -207,6 +209,47 @@ void AChamCharacter::CalculateCrosshairSpread(float DeltaTime)
 	CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
 
 	CrosshairSpreadMultiplier = 0.5f + CrosshairVelocityFactor;
+}
+
+void AChamCharacter::SetHUDCrosshairs(float DeltaTime)
+{
+	if (ChamController == nullptr) return;
+
+	if (ChamController)
+	{
+		HUD = HUD == nullptr ? Cast<AChamHUD>(ChamController->GetHUD()) : HUD;
+		UWorld* World = GetWorld();
+
+		if (HUD && World)
+		{
+			FHUDPackage HUDPackage;
+			HUDPackage.CrosshairCenter = CrosshairCenter;
+			HUDPackage.CrosshairLeft = CrosshairLeft;
+			HUDPackage.CrosshairRight = CrosshairRight;
+
+			// 크로스헤어 퍼짐 계산
+			FVector2D WalkSpeedRange{ 0.f, GetCharacterMovement()->MaxWalkSpeed };
+			FVector2D VelocityMultiplierRange{ 0.f, 1.f };
+			FVector Velocity = GetVelocity();
+			Velocity.Z = 0.f;
+
+			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
+
+			if (GetCharacterMovement()->IsFalling() || World->GetTimerManager().IsTimerActive(DashEffectTimer))
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
+			}
+			else
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
+			}
+
+
+			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
+
+			HUD->SetHUDPackage(HUDPackage);
+		}
+	}
 }
 
 void AChamCharacter::DashCoolTimerFinished()
