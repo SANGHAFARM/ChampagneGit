@@ -38,8 +38,8 @@ void AChamHUD::DrawHUD()
 
 void AChamHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
 {
-	const float TextureWidth = Texture->GetSizeX();
-	const float TextureHeight = Texture->GetSizeY();
+	const float TextureWidth = Texture->GetSizeX() + 5.f;
+	const float TextureHeight = Texture->GetSizeY() + 5.f;
 	const FVector2D TextureDrawPoint(
 		ViewportCenter.X - (TextureWidth / 2) + Spread.X,
 		ViewportCenter.Y - (TextureHeight / 2) + Spread.Y

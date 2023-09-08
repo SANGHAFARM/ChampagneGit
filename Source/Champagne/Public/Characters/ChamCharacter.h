@@ -32,8 +32,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(BlueprintCallable)
-	float GetCrosshairSpreadMultiplier() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -136,8 +134,6 @@ private:
 	float CrosshairInAirFactor;
 
 	float CrosshairAimFactor;
-
-	float CrosshairShootFactor;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairCenter;

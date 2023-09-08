@@ -82,11 +82,6 @@ void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
-float AChamCharacter::GetCrosshairSpreadMultiplier() const
-{
-	return CrosshairSpreadMultiplier;
-}
-
 // Called when the game starts or when spawned
 void AChamCharacter::BeginPlay()
 {
@@ -189,12 +184,15 @@ void AChamCharacter::CameraInterpZoom(float DeltaTime)
 	if (bAiming)
 	{		
 		CameraCurrentFOV = FMath::InterpExpoIn(CameraCurrentFOV, CameraZoomedFOV, 0.5f);
-		//CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraZoomedFOV, DeltaTime, ZoomInterpSpeed);
-		GetCamera()->SetFieldOfView(CameraCurrentFOV);
+		//CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraZoomedFOV, DeltaTime, ZoomInterpSpeed);		
 	}
 	else
 	{
-		CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraDefaultFOV, DeltaTime, ZoomInterpSpeed);
+		CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraDefaultFOV, DeltaTime, ZoomInterpSpeed);		
+	}
+
+	if (Camera)
+	{
 		GetCamera()->SetFieldOfView(CameraCurrentFOV);
 	}
 }
@@ -244,8 +242,17 @@ void AChamCharacter::SetHUDCrosshairs(float DeltaTime)
 				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
 			}
 
+			if (bAiming)
+			{
+				CrosshairAimFactor = FMath::InterpExpoIn(CrosshairAimFactor, 0.95f, 0.5f);
+				//FMath::FInterpTo(CrosshairAimFactor, 0.6f, DeltaTime, )
+			}
+			else
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
+			}
 
-			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
+			HUDPackage.CrosshairSpread = 1.f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor;
 
 			HUD->SetHUDPackage(HUDPackage);
 		}

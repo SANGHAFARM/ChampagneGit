@@ -26,6 +26,7 @@ void UChamAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		GroundSpeed = UKismetMathLibrary::VSizeXY(PlayerCharacterMovement->Velocity);
 		IsFalling = PlayerCharacterMovement->IsFalling();
+		Velocity = PlayerCharacterMovement->Velocity;
 	}
 
 	if (PlayerCharacter)
@@ -53,7 +54,6 @@ void UChamAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		bAiming = PlayerCharacter->GetAiming();
 
-		TurnInPlace();
 
 
 
@@ -64,18 +64,4 @@ void UChamAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		//FVector MoveDirection = (UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->Velocity)).Vector();
 		//DashDirection = FVector(MoveDirection.X, MoveDirection.Y, 0.f);		
 	}	
-}
-
-void UChamAnimInstance::TurnInPlace()
-{
-	if (PlayerCharacter == nullptr) return;
-
-	if (GroundSpeed <= 0 && bAiming)
-	{
-		CharacterYawLastFrame = CharacterYaw;
-		CharacterYaw = PlayerCharacter->GetActorRotation().Yaw;
-		const float YawDelta{ CharacterYaw - CharacterYawLastFrame };
-
-		RootYawOffset = UKismetMathLibrary::NormalizeAxis(RootYawOffset - YawDelta);
-	}
 }
