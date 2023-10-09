@@ -8,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "NiagaraComponent.h"
 #include "HUD/ChamHUD.h"
@@ -142,7 +143,7 @@ void AChamCharacter::Look(const FInputActionValue& Value)
 
 void AChamCharacter::Dash()
 {
-	if (bCanDash == false || GetCharacterMovement()->IsFalling()) return;
+	//if (bCanDash == false || GetCharacterMovement()->IsFalling()) return;
 
 	bCanDash = false;
 	
@@ -184,6 +185,7 @@ void AChamCharacter::CameraInterpZoom(float DeltaTime)
 	if (bAiming)
 	{		
 		CameraCurrentFOV = FMath::InterpExpoIn(CameraCurrentFOV, CameraZoomedFOV, 0.5f);
+		
 		//CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraZoomedFOV, DeltaTime, ZoomInterpSpeed);		
 	}
 	else
