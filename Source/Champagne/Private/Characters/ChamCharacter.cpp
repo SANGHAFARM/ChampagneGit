@@ -4,15 +4,18 @@
 #include "Characters/ChamCharacter.h"
 #include "PlayerController/ChamPlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "NiagaraComponent.h"
 #include "HUD/ChamHUD.h"
 #include "Engine/Texture2D.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "Weapon/Arrow.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
@@ -34,7 +37,7 @@ AChamCharacter::AChamCharacter()
 	Camera->SetupAttachment(SpringArm);
 	Camera->FieldOfView = 90.f;
 	Camera->bUsePawnControlRotation = false;
-
+	
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	bUseControllerRotationPitch = false;
@@ -42,7 +45,6 @@ AChamCharacter::AChamCharacter()
 	bUseControllerRotationYaw = false;
 
 	DashEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DashEffect"));
-	DashEffect->SetupAttachment(GetRootComponent());
 	DashEffect->bAutoActivate = false;
 
 	GetMesh()->bWaitForParallelClothTask = true;
@@ -62,7 +64,8 @@ void AChamCharacter::Tick(float DeltaTime)
 	// 크로스헤어 퍼짐
 	//CalculateCrosshairSpread(DeltaTime);
 
-
+	FHitResult HitResult;
+	TraceUnderCrosshairs(HitResult);
 }
 
 // Called to bind functionality to input
@@ -80,6 +83,38 @@ void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Ongoing, this, &AChamCharacter::AimingButtonPressed);
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &AChamCharacter::AimingButtonReleased);
+	}
+}
+
+void AChamCharacter::Fire(const FVector& Hit)
+{
+	APawn* InstigatorPawn = Cast<APawn>(this);
+	const USkeletalMeshSocket* ArrowSocket = GetMesh()->GetSocketByName(TEXT("arrow_socket"));
+
+	if (ArrowSocket)
+	{
+		FTransform SocketTransform = ArrowSocket->GetSocketTransform(GetMesh());
+		FVector ToTarget = Hit - SocketTransform.GetLocation();
+		FRotator TargetRotation = ToTarget.Rotation();
+
+		if (ArrowClass && InstigatorPawn)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = InstigatorPawn;
+
+			UWorld* World = GetWorld();
+
+			if (World)
+			{
+				World->SpawnActor<AArrow>(
+					ArrowClass, 
+					SocketTransform.GetLocation(),
+					TargetRotation,
+					SpawnParams
+				);
+			}
+		}
 	}
 }
 
@@ -169,8 +204,11 @@ void AChamCharacter::AimingButtonPressed()
 
 void AChamCharacter::AimingButtonReleased()
 {
-	if (Camera)
+	UWorld* World = GetWorld();
+	if (Camera && World)
 	{
+		Fire(HitTarget);
+		
 		bAiming = false;
 
 		if (GetCharacterMovement()->Velocity.Size() <= 0)
@@ -257,6 +295,49 @@ void AChamCharacter::SetHUDCrosshairs(float DeltaTime)
 			HUDPackage.CrosshairSpread = 1.f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor;
 
 			HUD->SetHUDPackage(HUDPackage);
+		}
+	}
+}
+
+void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
+{
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CrosshairLocation,
+		CrosshairWorldPosition,
+		CrosshairWorldDirection
+	);
+
+	if (bScreenToWorld)
+	{
+		FVector Start = CrosshairWorldPosition;
+		FVector End = Start + CrosshairWorldDirection * 10000.f;
+
+		GetWorld()->LineTraceSingleByChannel(
+			TraceHitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_Visibility
+		);
+
+		if (!TraceHitResult.bBlockingHit)
+		{
+			TraceHitResult.ImpactPoint = End;
+			HitTarget = End;
+		}
+		else
+		{
+			HitTarget = TraceHitResult.ImpactPoint;
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
 		}
 	}
 }

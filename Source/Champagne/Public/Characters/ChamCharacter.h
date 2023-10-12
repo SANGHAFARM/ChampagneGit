@@ -15,6 +15,7 @@ class UNiagaraComponent;
 class AChamHUD;
 class AChamPlayerController;
 class UTexture2D;
+class AArrow;
 
 
 UCLASS()
@@ -32,7 +33,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-
+	void Fire(const FVector& Hit);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -72,6 +73,8 @@ protected:
 	void CalculateCrosshairSpread(float DeltaTime);
 
 	void SetHUDCrosshairs(float DeltaTime);
+
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 private:	
 	AChamPlayerController* ChamController;
@@ -146,6 +149,11 @@ private:
 	/** </Crosshair> */
 
 	AChamHUD* HUD;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AArrow> ArrowClass;
+
+	FVector HitTarget;
 
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
