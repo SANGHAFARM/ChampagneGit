@@ -17,7 +17,6 @@ class AChamPlayerController;
 class UTexture2D;
 class AArrow;
 
-
 UCLASS()
 class CHAMPAGNE_API AChamCharacter : public ACharacter
 {
@@ -56,6 +55,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* Aiming;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* Cancel;
 	/** </Enhanced Input> */
 
 	void Move(const FInputActionValue& Value);
@@ -66,6 +68,7 @@ protected:
 	/** Aiming 버튼 입력에 따라 bAiming을 true 또는 false로 변경 */
 	void AimingButtonPressed();
 	void AimingButtonReleased();
+	void AimingCancel();
 
 	/** bAiming에 따라 조준 카메라 설정 */
 	void CameraInterpZoom(float DeltaTime);
@@ -75,6 +78,11 @@ protected:
 	void SetHUDCrosshairs(float DeltaTime);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
+
+	UFUNCTION(BlueprintCallable)
+	void CanFire();
 
 private:	
 	AChamPlayerController* ChamController;
@@ -128,6 +136,9 @@ private:
 	void DashEffectTimerFinished();
 	/** </Dash> */
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bCanFire = true;
+
 	/** <Crosshair> */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float CrosshairSpreadMultiplier;
@@ -154,6 +165,9 @@ private:
 	TSubclassOf<AArrow> ArrowClass;
 
 	FVector HitTarget;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* FireMontage;
 
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }

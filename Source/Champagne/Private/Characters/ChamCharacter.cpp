@@ -79,10 +79,11 @@ void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AChamCharacter::MoveEnd);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AChamCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AChamCharacter::Dash);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AChamCharacter::Dash);		
 
-		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Ongoing, this, &AChamCharacter::AimingButtonPressed);
+		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Started, this, &AChamCharacter::AimingButtonPressed);
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &AChamCharacter::AimingButtonReleased);
+		EnhancedInputComponent->BindAction(Cancel, ETriggerEvent::Started, this, &AChamCharacter::AimingCancel);
 	}
 }
 
@@ -195,27 +196,41 @@ void AChamCharacter::Dash()
 
 void AChamCharacter::AimingButtonPressed()
 {
-	if (Camera)
+	if (Camera && bCanFire)
 	{
 		bAiming = true;
-		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;		
 	}	
 }
 
 void AChamCharacter::AimingButtonReleased()
 {
-	UWorld* World = GetWorld();
-	if (Camera && World)
+	if (Camera && bAiming)
 	{
 		Fire(HitTarget);
-		
+		PlayMontageSection(FireMontage, TEXT("Reload"));
+
+		bAiming = false;	
+		bCanFire = false;
+
+		if (GetCharacterMovement()->Velocity.Size() <= 0)
+		{
+			GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		}	
+	}	
+}
+
+void AChamCharacter::AimingCancel()
+{
+	if (Camera && bAiming)
+	{
 		bAiming = false;
 
 		if (GetCharacterMovement()->Velocity.Size() <= 0)
 		{
 			GetCharacterMovement()->bUseControllerDesiredRotation = false;
-		}		
-	}	
+		}
+	}
 }
 
 void AChamCharacter::CameraInterpZoom(float DeltaTime)
@@ -320,7 +335,7 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	if (bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;
-		FVector End = Start + CrosshairWorldDirection * 10000.f;
+		FVector End = Start + CrosshairWorldDirection * 15000.f;
 
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
@@ -339,6 +354,25 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			HitTarget = TraceHitResult.ImpactPoint;
 			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
 		}
+	}
+}
+
+void AChamCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && Montage)
+	{
+		AnimInstance->Montage_Play(Montage);
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void AChamCharacter::CanFire()
+{
+	if (bCanFire == false)
+	{
+		bCanFire = true;
 	}
 }
 

@@ -23,20 +23,13 @@ AArrow::AArrow()
 	ArrowMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	ArrowMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ArrowMovement"));
-	ArrowMovement->bRotationFollowsVelocity = true;
+	ArrowMovement->bRotationFollowsVelocity = false;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->SetupAttachment(ArrowMesh);
 	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-}
-
-// Called every frame
-void AArrow::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 // Called when the game starts or when spawned
