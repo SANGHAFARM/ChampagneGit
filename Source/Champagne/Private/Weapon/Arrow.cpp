@@ -22,12 +22,14 @@ AArrow::AArrow()
 	ArrowMesh->SetupAttachment(GetRootComponent());
 	ArrowMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	ArrowMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ArrowMovement"));
-	ArrowMovement->bRotationFollowsVelocity = false;
-
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->SetupAttachment(ArrowMesh);
 	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+
+	ArrowMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ArrowMovement"));	
+	ArrowMovement->InitialSpeed = 1000.f;
+	ArrowMovement->MaxSpeed = 6500.f;	
+	ArrowMovement->bRotationFollowsVelocity = true;	
 
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 }
@@ -38,6 +40,7 @@ void AArrow::BeginPlay()
 	Super::BeginPlay();
 	
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AArrow::OnOverlapBegin);
+	
 }
 
 void AArrow::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -56,4 +59,9 @@ void AArrow::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 			UGameplayStatics::SpawnEmitterAtLocation(World, HitParticle, ParticleLocation);
 		}
 	}
+}
+
+void AArrow::SetArrowSpeed(float ArrowSpeed)
+{
+	ArrowMovement->InitialSpeed = ArrowSpeed;
 }

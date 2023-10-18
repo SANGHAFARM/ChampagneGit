@@ -14,6 +14,7 @@
 #include "Engine/Texture2D.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Weapon/Arrow.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 
@@ -61,6 +62,8 @@ void AChamCharacter::Tick(float DeltaTime)
 
 	SetHUDCrosshairs(DeltaTime);
 
+	SetTargetArrowSpeed(DeltaTime);
+
 	// 크로스헤어 퍼짐
 	//CalculateCrosshairSpread(DeltaTime);
 
@@ -100,20 +103,28 @@ void AChamCharacter::Fire(const FVector& Hit)
 
 		if (ArrowClass && InstigatorPawn)
 		{
+			AArrow* DefaultArrow = Cast<AArrow>(ArrowClass.GetDefaultObject());
+
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
 			SpawnParams.Instigator = InstigatorPawn;
 
 			UWorld* World = GetWorld();
 
-			if (World)
+			if (World && DefaultArrow)
 			{
-				World->SpawnActor<AArrow>(
+				float MaxSpeed = 1.0f;
+				float NormalizeChargeTime = FMath::Clamp(ArrowTargetSpeed / MaxSpeed, 0.0f, 1.0f);
+				float ArrowSpeed = ArrowInitialSpeed + (ArrowMaxSpeed - ArrowInitialSpeed) * NormalizeChargeTime;
+
+				DefaultArrow->SetArrowSpeed(ArrowSpeed);
+
+				AArrow* NewArrow = World->SpawnActor<AArrow>(
 					ArrowClass, 
 					SocketTransform.GetLocation(),
 					TargetRotation,
 					SpawnParams
-				);
+				);				
 			}
 		}
 	}
@@ -212,6 +223,7 @@ void AChamCharacter::AimingButtonReleased()
 
 		bAiming = false;	
 		bCanFire = false;
+		ArrowTargetSpeed = 0.f;
 
 		if (GetCharacterMovement()->Velocity.Size() <= 0)
 		{
@@ -373,6 +385,14 @@ void AChamCharacter::CanFire()
 	if (bCanFire == false)
 	{
 		bCanFire = true;
+	}
+}
+
+void AChamCharacter::SetTargetArrowSpeed(float DeltaTime)
+{
+	if (bAiming)
+	{
+		ArrowTargetSpeed += DeltaTime * 1.5f;		
 	}
 }
 

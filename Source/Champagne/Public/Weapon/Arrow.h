@@ -19,6 +19,9 @@ public:
 	// Sets default values for this actor's properties
 	AArrow();
 
+	UPROPERTY(VisibleAnywhere)
+	UProjectileMovementComponent* ArrowMovement;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -34,11 +37,12 @@ private:
 	UStaticMeshComponent* ArrowMesh;
 	
 	UPROPERTY(VisibleAnywhere)
-	UProjectileMovementComponent* ArrowMovement;
-
-	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* BoxCollision;
 
 	UPROPERTY(EditDefaultsOnly)
 	UParticleSystem* HitParticle;
+
+public:
+	void SetArrowSpeed(float ArrowSpeed);
+		
 };

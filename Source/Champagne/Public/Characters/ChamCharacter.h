@@ -84,6 +84,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void CanFire();
 
+	void SetTargetArrowSpeed(float DeltaTime);
+
 private:	
 	AChamPlayerController* ChamController;
 
@@ -163,6 +165,13 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AArrow> ArrowClass;
+
+	const float ArrowInitialSpeed = 1000.f;
+
+	const float ArrowMaxSpeed = 6500.f;
+
+	UPROPERTY(VisibleAnywhere)
+	float ArrowTargetSpeed = 0.f;
 
 	FVector HitTarget;
 
