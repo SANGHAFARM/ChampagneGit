@@ -2,11 +2,12 @@
 
 
 #include "Weapon/Arrow.h"
-#include "Engine/StaticMesh.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Interfaces/PickUpInterface.h"
 
 // Sets default values
 AArrow::AArrow()
@@ -26,6 +27,9 @@ AArrow::AArrow()
 	BoxCollision->SetupAttachment(ArrowMesh);
 	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 
+	SphereArea = CreateDefaultSubobject<USphereComponent>(TEXT("SphereArea"));
+	SphereArea->SetupAttachment(GetRootComponent());
+
 	ArrowMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ArrowMovement"));	
 	ArrowMovement->InitialSpeed = 1000.f;
 	ArrowMovement->MaxSpeed = 6500.f;	
@@ -34,16 +38,29 @@ AArrow::AArrow()
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 }
 
+void AArrow::HighlightArrow()
+{
+	ArrowMesh->SetRenderCustomDepth(true);
+	ArrowMesh->SetCustomDepthStencilValue(1);
+}
+
+void AArrow::UnHighlightArrow()
+{
+	ArrowMesh->SetRenderCustomDepth(false);
+}
+
 // Called when the game starts or when spawned
 void AArrow::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AArrow::OnOverlapBegin);
-	
+	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AArrow::WhenHit);
+
+	SphereArea->OnComponentBeginOverlap.AddDynamic(this, &AArrow::OnSphereAreaBeginOverlap);
+	SphereArea->OnComponentEndOverlap.AddDynamic(this, &AArrow::OnSphereAreaEndOverlap);
 }
 
-void AArrow::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {	
 	if (OtherActor && OtherActor != this && OtherActor != GetOwner())
 	{
@@ -58,6 +75,26 @@ void AArrow::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 		{			
 			UGameplayStatics::SpawnEmitterAtLocation(World, HitParticle, ParticleLocation);
 		}
+	}
+}
+
+void AArrow::OnSphereAreaBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	IPickUpInterface* PickUpInterface = Cast<IPickUpInterface>(OtherActor);
+
+	if (PickUpInterface)
+	{
+		PickUpInterface->SetOverlappingArrow(this);
+	}
+}
+
+void AArrow::OnSphereAreaEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	IPickUpInterface* PickUpInterface = Cast<IPickUpInterface>(OtherActor);
+
+	if (PickUpInterface)
+	{
+		PickUpInterface->RemoveOverlappingArrow(this);
 	}
 }
 

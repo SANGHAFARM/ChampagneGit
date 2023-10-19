@@ -82,11 +82,32 @@ void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AChamCharacter::MoveEnd);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AChamCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AChamCharacter::Dash);		
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AChamCharacter::Dash);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AChamCharacter::Interact);
+
 
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Started, this, &AChamCharacter::AimingButtonPressed);
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &AChamCharacter::AimingButtonReleased);
 		EnhancedInputComponent->BindAction(Cancel, ETriggerEvent::Started, this, &AChamCharacter::AimingCancel);
+	}
+}
+
+void AChamCharacter::SetOverlappingArrow(AArrow* Arrow)
+{
+	if (Arrow)
+	{
+		OverlappingArrows.Add(Arrow);
+	}	
+}
+
+void AChamCharacter::RemoveOverlappingArrow(AArrow* Arrow)
+{
+	if (Arrow)
+	{
+		if (OverlappingArrows.Contains(Arrow))
+		{
+			OverlappingArrows.Remove(Arrow);
+		}
 	}
 }
 
@@ -203,6 +224,16 @@ void AChamCharacter::Dash()
 		GetWorldTimerManager().SetTimer(DashEffectTimer, this, &AChamCharacter::DashEffectTimerFinished, 0.2f);						
 		GetWorldTimerManager().SetTimer(DashCoolTimer, this, &AChamCharacter::DashCoolTimerFinished, 2.f);
 	}	
+}
+
+void AChamCharacter::Interact()
+{
+	if (SelectedArrow && OverlappingArrows.Contains(SelectedArrow))
+	{
+		OverlappingArrows.Remove(SelectedArrow);
+		SelectedArrow->Destroy();
+		SelectedArrow = nullptr;
+	}
 }
 
 void AChamCharacter::AimingButtonPressed()
@@ -363,8 +394,45 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		}
 		else
 		{
-			HitTarget = TraceHitResult.ImpactPoint;
-			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
+			AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor());
+
+			if (ArrowActor)
+			{
+				SelectedArrow = ArrowActor;
+
+				IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+				ArrowInterface->HighlightArrow();
+
+				/*LastArrow = ThisArrow;
+				ThisArrow = Cast<IPickUpInterface>(ArrowActor);
+
+				if (LastArrow != ThisArrow)
+				{
+					if (LastArrow)
+					{
+						LastArrow->UnHighlightArrow();
+					}
+
+					if (ThisArrow)
+					{
+						ThisArrow->HighlightArrow();
+					}
+				}*/
+			}
+			else
+			{
+				if (SelectedArrow)
+				{
+					IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+					ArrowInterface->UnHighlightArrow();
+					SelectedArrow = nullptr;
+				}
+				
+				HitTarget = TraceHitResult.ImpactPoint;
+				DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
 		}
 	}
 }
@@ -380,7 +448,7 @@ void AChamCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& Sect
 	}
 }
 
-void AChamCharacter::CanFire()
+void AChamCharacter::SetCanFire()
 {
 	if (bCanFire == false)
 	{

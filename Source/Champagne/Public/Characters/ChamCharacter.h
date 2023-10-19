@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Interfaces/PickUpInterface.h"
 #include "ChamCharacter.generated.h"
 
 class UInputMappingContext;
@@ -18,7 +19,7 @@ class UTexture2D;
 class AArrow;
 
 UCLASS()
-class CHAMPAGNE_API AChamCharacter : public ACharacter
+class CHAMPAGNE_API AChamCharacter : public ACharacter, public IPickUpInterface
 {
 	GENERATED_BODY()
 
@@ -32,7 +33,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void Fire(const FVector& Hit);
+	virtual void SetOverlappingArrow(AArrow* Arrow) override;
+	virtual void RemoveOverlappingArrow(AArrow* Arrow) override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -54,16 +57,21 @@ protected:
 	UInputAction* DashAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* InteractAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* Aiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* Cancel;
+	
 	/** </Enhanced Input> */
 
 	void Move(const FInputActionValue& Value);
 	void MoveEnd();
 	void Look(const FInputActionValue& Value);
 	void Dash();
+	void Interact();
 
 	/** Aiming 버튼 입력에 따라 bAiming을 true 또는 false로 변경 */
 	void AimingButtonPressed();
@@ -81,10 +89,16 @@ protected:
 
 	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
 
+	void Fire(const FVector& Hit);
+
 	UFUNCTION(BlueprintCallable)
-	void CanFire();
+	void SetCanFire();
 
 	void SetTargetArrowSpeed(float DeltaTime);
+
+	void DashCoolTimerFinished();
+
+	void DashEffectTimerFinished();
 
 private:	
 	AChamPlayerController* ChamController;
@@ -126,16 +140,12 @@ private:
 
 	FTimerHandle DashCoolTimer;
 
-	void DashCoolTimerFinished();
-
 	UPROPERTY(EditAnywhere, Category = Effect)
 	UNiagaraComponent* DashEffect;
 
 	FTimerHandle DashEffectTimer;
 	
 	float DashEffectTime = 0.5f;
-
-	void DashEffectTimerFinished();
 	/** </Dash> */
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -166,17 +176,29 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AArrow> ArrowClass;
 
-	const float ArrowInitialSpeed = 1000.f;
+	UPROPERTY(EditAnywhere)
+	float ArrowInitialSpeed = 1000.f;
 
-	const float ArrowMaxSpeed = 6500.f;
+	UPROPERTY(EditAnywhere)
+	float ArrowMaxSpeed = 6500.f;
 
 	UPROPERTY(VisibleAnywhere)
 	float ArrowTargetSpeed = 0.f;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<AArrow*> OverlappingArrows;
+
+	UPROPERTY(VisibleAnywhere)
+	AArrow* SelectedArrow;
 
 	FVector HitTarget;
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* FireMontage;
+	
+	IPickUpInterface* LastArrow;
+
+	IPickUpInterface* ThisArrow;
 
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
