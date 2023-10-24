@@ -11,6 +11,7 @@ class UStaticMeshComponent;
 class UProjectileMovementComponent;
 class UBoxComponent;
 class USphereComponent;
+class UNiagaraComponent;
 
 UCLASS()
 class CHAMPAGNE_API AArrow : public AActor, public IPickUpInterface
@@ -20,9 +21,6 @@ class CHAMPAGNE_API AArrow : public AActor, public IPickUpInterface
 public:	
 	// Sets default values for this actor's properties
 	AArrow();
-
-	UPROPERTY(VisibleAnywhere)
-	UProjectileMovementComponent* ArrowMovement;
 
 	virtual void HighlightArrow() override;
 	virtual void UnHighlightArrow() override;
@@ -55,6 +53,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	UParticleSystem* HitParticle;
+
+	UPROPERTY(EditDefaultsOnly)
+	UNiagaraComponent* ArrowTrail;
+
+	UPROPERTY(VisibleAnywhere)
+	UProjectileMovementComponent* ArrowMovement;
 
 public:
 	void SetArrowSpeed(float ArrowSpeed);

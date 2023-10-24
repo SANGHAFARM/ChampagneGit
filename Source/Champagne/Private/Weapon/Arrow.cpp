@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/PickUpInterface.h"
 
@@ -29,6 +30,9 @@ AArrow::AArrow()
 
 	SphereArea = CreateDefaultSubobject<USphereComponent>(TEXT("SphereArea"));
 	SphereArea->SetupAttachment(GetRootComponent());
+
+	ArrowTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ArrowTrail"));
+	ArrowTrail->SetupAttachment(GetRootComponent());
 
 	ArrowMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ArrowMovement"));	
 	ArrowMovement->InitialSpeed = 1000.f;
@@ -58,6 +62,11 @@ void AArrow::BeginPlay()
 
 	SphereArea->OnComponentBeginOverlap.AddDynamic(this, &AArrow::OnSphereAreaBeginOverlap);
 	SphereArea->OnComponentEndOverlap.AddDynamic(this, &AArrow::OnSphereAreaEndOverlap);
+	
+	if (ArrowTrail->GetFXSystemAsset())
+	{
+		ArrowTrail->Activate();
+	}
 }
 
 void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -71,9 +80,10 @@ void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActo
 
 		FVector ParticleLocation = BoxCollision->GetComponentToWorld().GetLocation();
 		UWorld* World = GetWorld();
-		if (World && HitParticle)
+		if (World && HitParticle && ArrowTrail)
 		{			
 			UGameplayStatics::SpawnEmitterAtLocation(World, HitParticle, ParticleLocation);
+			ArrowTrail->Deactivate();
 		}
 	}
 }

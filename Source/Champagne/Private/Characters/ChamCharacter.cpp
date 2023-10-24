@@ -139,15 +139,15 @@ void AChamCharacter::Fire(const FVector& Hit)
 				float ArrowSpeed = ArrowInitialSpeed + (ArrowMaxSpeed - ArrowInitialSpeed) * NormalizeChargeTime;
 
 				DefaultArrow->SetArrowSpeed(ArrowSpeed);
-
-				AArrow* NewArrow = World->SpawnActor<AArrow>(
+				
+				World->SpawnActor<AArrow>(
 					ArrowClass, 
 					SocketTransform.GetLocation(),
 					TargetRotation,
 					SpawnParams
-				);				
+				);			
 			}
-		}
+		}		
 	}
 }
 
@@ -396,7 +396,7 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		{
 			AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor());
 
-			if (ArrowActor)
+			if (ArrowActor && OverlappingArrows.Contains(ArrowActor))
 			{
 				SelectedArrow = ArrowActor;
 
