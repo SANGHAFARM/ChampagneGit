@@ -402,22 +402,6 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 				IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
 				ArrowInterface->HighlightArrow();
-
-				/*LastArrow = ThisArrow;
-				ThisArrow = Cast<IPickUpInterface>(ArrowActor);
-
-				if (LastArrow != ThisArrow)
-				{
-					if (LastArrow)
-					{
-						LastArrow->UnHighlightArrow();
-					}
-
-					if (ThisArrow)
-					{
-						ThisArrow->HighlightArrow();
-					}
-				}*/
 			}
 			else
 			{

@@ -12,6 +12,7 @@ class UProjectileMovementComponent;
 class UBoxComponent;
 class USphereComponent;
 class UNiagaraComponent;
+class UWidgetComponent;
 
 UCLASS()
 class CHAMPAGNE_API AArrow : public AActor, public IPickUpInterface
@@ -49,6 +50,9 @@ private:
 	UBoxComponent* BoxCollision;
 
 	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* ArrowBox;
+
+	UPROPERTY(VisibleAnywhere)
 	USphereComponent* SphereArea;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -59,6 +63,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UProjectileMovementComponent* ArrowMovement;
+
+	UPROPERTY(VisibleAnywhere)
+	UWidgetComponent* PickupWidget;
 
 public:
 	void SetArrowSpeed(float ArrowSpeed);

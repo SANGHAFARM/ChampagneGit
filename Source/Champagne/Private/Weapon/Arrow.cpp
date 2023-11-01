@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,10 +24,17 @@ AArrow::AArrow()
 	ArrowMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArrowMesh"));
 	ArrowMesh->SetupAttachment(GetRootComponent());
 	ArrowMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ArrowMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->SetupAttachment(ArrowMesh);
 	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+
+	ArrowBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ArrowBox"));
+	ArrowBox->SetupAttachment(GetRootComponent());
+	ArrowBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ArrowBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	ArrowBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	SphereArea = CreateDefaultSubobject<USphereComponent>(TEXT("SphereArea"));
 	SphereArea->SetupAttachment(GetRootComponent());
@@ -39,18 +47,38 @@ AArrow::AArrow()
 	ArrowMovement->MaxSpeed = 6500.f;	
 	ArrowMovement->bRotationFollowsVelocity = true;	
 
+	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
+	PickupWidget->SetupAttachment(GetRootComponent());
+	PickupWidget->SetVisibility(false);
+
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 }
 
 void AArrow::HighlightArrow()
 {
-	ArrowMesh->SetRenderCustomDepth(true);
-	ArrowMesh->SetCustomDepthStencilValue(1);
+	if (ArrowMesh)
+	{
+		ArrowMesh->SetRenderCustomDepth(true);
+		ArrowMesh->SetCustomDepthStencilValue(1);
+	}
+	
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(true);
+	}	
 }
 
 void AArrow::UnHighlightArrow()
 {
-	ArrowMesh->SetRenderCustomDepth(false);
+	if (ArrowMesh)
+	{
+		ArrowMesh->SetRenderCustomDepth(false);
+	}
+
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(false);
+	}
 }
 
 // Called when the game starts or when spawned
