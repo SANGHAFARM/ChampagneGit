@@ -7,6 +7,7 @@
 #include "CharacterOverlay.generated.h"
 
 class UProgressBar;
+class UTextBlock;
 
 /**
  * 
@@ -18,4 +19,10 @@ class CHAMPAGNE_API UCharacterOverlay : public UUserWidget
 public:
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HealthPoint;	
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* CurrentArrows;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MaxArrows;
 };

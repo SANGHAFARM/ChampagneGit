@@ -17,7 +17,11 @@ class CHAMPAGNE_API AChamPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
-	void SetHUDHealth(float Health, float MaxHealth);
+	void CheckHUD();
+
+	void SetHUDHealth(float Health, float MaxHealth);	
+	void SetCurrentArrows(const uint8 CurrentArrows);
+	void SetMaxArrows(const uint8 MaxArrows);
 
 protected:
 	virtual void BeginPlay() override;

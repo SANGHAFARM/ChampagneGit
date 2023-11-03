@@ -4,6 +4,7 @@
 #include "PlayerController/ChamPlayerController.h"
 #include "HUD/ChamHUD.h"
 #include "HUD/CharacterOverlay.h"
+#include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
 
 void AChamPlayerController::BeginPlay()
@@ -13,13 +14,38 @@ void AChamPlayerController::BeginPlay()
 	ChamHUD = Cast<AChamHUD>(GetHUD());
 }
 
-void AChamPlayerController::SetHUDHealth(float Health, float MaxHealth)
+void AChamPlayerController::CheckHUD()
 {
 	ChamHUD = ChamHUD == nullptr ? Cast<AChamHUD>(GetHUD()) : ChamHUD;
+}
+
+void AChamPlayerController::SetHUDHealth(float Health, float MaxHealth)
+{
+	CheckHUD();
 
 	if (ChamHUD && ChamHUD->CharacterOverlay && ChamHUD->CharacterOverlay->HealthPoint)
 	{
 		const float HealthPercent = Health / MaxHealth;
 		ChamHUD->CharacterOverlay->HealthPoint->SetPercent(HealthPercent);
+	}
+}
+
+void AChamPlayerController::SetCurrentArrows(const uint8 CurrentArrows)
+{
+	CheckHUD();
+
+	if (ChamHUD && ChamHUD->CharacterOverlay && ChamHUD->CharacterOverlay->MaxArrows && ChamHUD->CharacterOverlay->CurrentArrows)
+	{
+		ChamHUD->CharacterOverlay->CurrentArrows->SetText(FText::AsNumber(CurrentArrows));
+	}
+}
+
+void AChamPlayerController::SetMaxArrows(const uint8 MaxArrows)
+{
+	CheckHUD();
+
+	if (ChamHUD && ChamHUD->CharacterOverlay && ChamHUD->CharacterOverlay->MaxArrows && ChamHUD->CharacterOverlay->CurrentArrows)
+	{
+		ChamHUD->CharacterOverlay->MaxArrows->SetText(FText::AsNumber(MaxArrows));
 	}
 }

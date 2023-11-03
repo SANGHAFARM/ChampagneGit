@@ -156,6 +156,8 @@ void AChamCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CurrentArrows = MaxArrows;
+
 	ChamController = Cast<AChamPlayerController>(GetController());
 	if (ChamController)
 	{		
@@ -165,6 +167,8 @@ void AChamCharacter::BeginPlay()
 		}
 
 		ChamController->SetHUDHealth(CurrentHealth, MaxHealth);
+		ChamController->SetMaxArrows(MaxArrows);
+		ChamController->SetCurrentArrows(CurrentArrows);
 	}
 
 	if (Camera)
@@ -235,12 +239,34 @@ void AChamCharacter::Interact()
 		OverlappingArrows.Remove(SelectedArrow);
 		SelectedArrow->Destroy();
 		SelectedArrow = nullptr;
+
+		if (CurrentArrows < MaxArrows && ChamController)
+		{
+			CurrentArrows++;
+			ChamController->SetCurrentArrows(CurrentArrows);
+
+			HideOrUnHideArrowMesh(CurrentArrows);
+		}	
+	}
+}
+
+void AChamCharacter::HideOrUnHideArrowMesh(const uint8 CurArrows)
+{
+	if (GetMesh() == nullptr) return;
+
+	if (CurArrows > 0)
+	{
+		GetMesh()->UnHideBoneByName(FName("arrow_nock"));
+	}
+	else
+	{
+		GetMesh()->HideBoneByName(FName("arrow_nock"), EPhysBodyOp::PBO_None);
 	}
 }
 
 void AChamCharacter::AimingButtonPressed()
 {
-	if (Camera && bCanFire)
+	if (Camera && bCanFire && CurrentArrows > 0)
 	{
 		bAiming = true;
 		GetCharacterMovement()->bUseControllerDesiredRotation = true;		
@@ -253,6 +279,15 @@ void AChamCharacter::AimingButtonReleased()
 	{
 		Fire(HitTarget);
 		PlayMontageSection(FireMontage, TEXT("Reload"));
+
+
+		if (CurrentArrows > 0 && ChamController)
+		{
+			CurrentArrows--;
+			ChamController->SetCurrentArrows(CurrentArrows);
+
+			HideOrUnHideArrowMesh(CurrentArrows);
+		}
 
 		bAiming = false;	
 		bCanFire = false;

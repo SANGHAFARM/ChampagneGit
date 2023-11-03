@@ -63,8 +63,7 @@ protected:
 	UInputAction* Aiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* Cancel;
-	
+	UInputAction* Cancel;	
 	/** </Enhanced Input> */
 
 	void Move(const FInputActionValue& Value);
@@ -72,6 +71,8 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Dash();
 	void Interact();
+
+	void HideOrUnHideArrowMesh(const uint8 CurArrows);
 
 	/** Aiming 버튼 입력에 따라 bAiming을 true 또는 false로 변경 */
 	void AimingButtonPressed();
@@ -179,6 +180,7 @@ private:
 
 	AChamHUD* HUD;
 
+	/** <Arrow> */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AArrow> ArrowClass;
 
@@ -197,15 +199,18 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	AArrow* SelectedArrow;
 
+	UPROPERTY(EditAnywhere)
+	uint8 MaxArrows = 10;
+
+	UPROPERTY(EditAnywhere)
+	uint8 CurrentArrows;
+	/** </Arrow> */
+
 	FVector HitTarget;
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* FireMontage;
 	
-	IPickUpInterface* LastArrow;
-
-	IPickUpInterface* ThisArrow;
-
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 	FORCEINLINE bool GetAiming() const { return bAiming; }
