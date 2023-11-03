@@ -103,6 +103,12 @@ protected:
 private:	
 	AChamPlayerController* ChamController;
 
+	UPROPERTY(EditAnywhere)
+	float MaxHealth = 5;
+
+	UPROPERTY(EditAnywhere)
+	float CurrentHealth;
+
 	/** <Camera> */
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	USpringArmComponent* SpringArm;

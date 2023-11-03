@@ -155,7 +155,7 @@ void AChamCharacter::Fire(const FVector& Hit)
 void AChamCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	ChamController = Cast<AChamPlayerController>(GetController());
 	if (ChamController)
 	{		
@@ -163,6 +163,8 @@ void AChamCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(PlayerMappingContext, 0);
 		}
+
+		ChamController->SetHUDHealth(CurrentHealth, MaxHealth);
 	}
 
 	if (Camera)

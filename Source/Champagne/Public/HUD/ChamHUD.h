@@ -7,6 +7,8 @@
 #include "ChamHUD.generated.h"
 
 class UTexture2D;
+class UUserWidget;
+class UCharacterOverlay;
 
 USTRUCT(BlueprintType)
 struct FHUDPackage
@@ -30,6 +32,15 @@ class CHAMPAGNE_API AChamHUD : public AHUD
 	
 public:
 	virtual void DrawHUD() override;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> CharacterOverlayClass;
+
+	UCharacterOverlay* CharacterOverlay;
+protected:
+	virtual void BeginPlay() override;
+
+	void AddCharacterOverlay();
 
 private:
 	FHUDPackage HUDPackage;

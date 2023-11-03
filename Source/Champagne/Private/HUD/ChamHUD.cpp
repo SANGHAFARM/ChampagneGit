@@ -3,6 +3,8 @@
 
 #include "HUD/ChamHUD.h"
 #include "Engine/Texture2D.h"
+#include "GameFramework/PlayerController.h"
+#include "HUD/CharacterOverlay.h"
 
 void AChamHUD::DrawHUD()
 {
@@ -33,6 +35,24 @@ void AChamHUD::DrawHUD()
 			FVector2D Spread(SpreadScaled, 0.f);
 			DrawCrosshair(HUDPackage.CrosshairRight, ViewprotCenter, Spread);
 		}
+	}
+}
+
+void AChamHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AddCharacterOverlay();
+}
+
+void AChamHUD::AddCharacterOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
 	}
 }
 
