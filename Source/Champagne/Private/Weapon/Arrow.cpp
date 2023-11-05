@@ -54,30 +54,27 @@ AArrow::AArrow()
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 }
 
-void AArrow::HighlightArrow()
+void AArrow::HighlightArrow(bool Switch)
 {
-	if (ArrowMesh)
+	if (ArrowMesh == nullptr)
+		return;
+
+	if (Switch == true)
 	{
 		ArrowMesh->SetRenderCustomDepth(true);
 		ArrowMesh->SetCustomDepthStencilValue(1);
 	}
-	
-	if (PickupWidget)
-	{
-		PickupWidget->SetVisibility(true);
-	}	
-}
-
-void AArrow::UnHighlightArrow()
-{
-	if (ArrowMesh)
+	else
 	{
 		ArrowMesh->SetRenderCustomDepth(false);
 	}
+}
 
+void AArrow::ShowPickupWidget(bool Switch)
+{
 	if (PickupWidget)
 	{
-		PickupWidget->SetVisibility(false);
+		PickupWidget->SetVisibility(Switch);
 	}
 }
 

@@ -13,10 +13,10 @@ void IPickUpInterface::RemoveOverlappingArrow(AArrow* Arrow)
 {
 }
 
-void IPickUpInterface::HighlightArrow()
+void IPickUpInterface::HighlightArrow(bool Switch)
 {
 }
 
-void IPickUpInterface::UnHighlightArrow()
+void IPickUpInterface::ShowPickupWidget(bool Switch)
 {
 }

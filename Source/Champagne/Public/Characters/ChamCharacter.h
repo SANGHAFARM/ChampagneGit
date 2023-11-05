@@ -60,6 +60,9 @@ protected:
 	UInputAction* InteractAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* TabAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* Aiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -71,6 +74,8 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Dash();
 	void Interact();
+	void TabOn();
+	void TabOff();
 
 	void HideOrUnHideArrowMesh(const uint8 CurArrows);
 
@@ -134,6 +139,9 @@ private:
 	/** 조준 여부 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	bool bAiming = false;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* ScreenFilterMaterial;
 	/** </Camera> */
 
 	/** <Dash> */
@@ -180,6 +188,8 @@ private:
 
 	AChamHUD* HUD;
 
+	bool bFilterChanged = false;
+
 	/** <Arrow> */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AArrow> ArrowClass;
@@ -195,6 +205,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<AArrow*> OverlappingArrows;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<AArrow*> ArrowsInWorld;
 
 	UPROPERTY(VisibleAnywhere)
 	AArrow* SelectedArrow;

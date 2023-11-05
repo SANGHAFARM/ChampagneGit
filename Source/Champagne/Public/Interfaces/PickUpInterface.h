@@ -27,6 +27,7 @@ public:
 	virtual void SetOverlappingArrow(AArrow* Arrow);
 	virtual void RemoveOverlappingArrow(AArrow* Arrow);
 
-	virtual void HighlightArrow();
-	virtual void UnHighlightArrow();
+	virtual void HighlightArrow(bool Switch);
+
+	virtual void ShowPickupWidget(bool Switch);
 };

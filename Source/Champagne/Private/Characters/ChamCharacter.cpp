@@ -84,6 +84,8 @@ void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AChamCharacter::Dash);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AChamCharacter::Interact);
+		EnhancedInputComponent->BindAction(TabAction, ETriggerEvent::Started, this, &AChamCharacter::TabOn);
+		EnhancedInputComponent->BindAction(TabAction, ETriggerEvent::Completed, this, &AChamCharacter::TabOff);
 
 
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Started, this, &AChamCharacter::AimingButtonPressed);
@@ -140,12 +142,17 @@ void AChamCharacter::Fire(const FVector& Hit)
 
 				DefaultArrow->SetArrowSpeed(ArrowSpeed);
 				
-				World->SpawnActor<AArrow>(
+				AArrow* NewArrow = World->SpawnActor<AArrow>(
 					ArrowClass, 
 					SocketTransform.GetLocation(),
 					TargetRotation,
 					SpawnParams
 				);			
+
+				if (NewArrow)
+				{
+					ArrowsInWorld.Add(NewArrow);
+				}
 			}
 		}		
 	}
@@ -234,9 +241,12 @@ void AChamCharacter::Dash()
 
 void AChamCharacter::Interact()
 {
-	if (SelectedArrow && OverlappingArrows.Contains(SelectedArrow))
+	
+	if (SelectedArrow && OverlappingArrows.Contains(SelectedArrow) && ArrowsInWorld.Contains(SelectedArrow))
 	{
 		OverlappingArrows.Remove(SelectedArrow);
+		ArrowsInWorld.Remove(SelectedArrow);
+
 		SelectedArrow->Destroy();
 		SelectedArrow = nullptr;
 
@@ -247,6 +257,48 @@ void AChamCharacter::Interact()
 
 			HideOrUnHideArrowMesh(CurrentArrows);
 		}	
+	}
+}
+
+void AChamCharacter::TabOn()
+{
+	if (bFilterChanged == true)
+		return;
+
+	bFilterChanged = true;
+
+	if (ScreenFilterMaterial && Camera)
+	{
+		Camera->PostProcessSettings.AddBlendable(ScreenFilterMaterial, 1.0f);
+	}
+
+	if (ArrowsInWorld.Num() > 0)
+	{
+		for (AArrow* Arrow : ArrowsInWorld)
+		{
+			Arrow->HighlightArrow(true);
+		}
+	}
+}
+
+void AChamCharacter::TabOff()
+{
+	if (bFilterChanged == false)
+		return;
+
+	bFilterChanged = false;
+
+	if (ScreenFilterMaterial && Camera)
+	{
+		Camera->PostProcessSettings.RemoveBlendable(ScreenFilterMaterial);		
+	}
+
+	if (ArrowsInWorld.Num() > 0)
+	{
+		for (AArrow* Arrow : ArrowsInWorld)
+		{
+			Arrow->HighlightArrow(false);
+		}
 	}
 }
 
@@ -269,7 +321,9 @@ void AChamCharacter::AimingButtonPressed()
 	if (Camera && bCanFire && CurrentArrows > 0)
 	{
 		bAiming = true;
-		GetCharacterMovement()->bUseControllerDesiredRotation = true;		
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;	
+
+		TabOff();
 	}	
 }
 
@@ -437,15 +491,24 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			{
 				SelectedArrow = ArrowActor;
 
-				IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
-				ArrowInterface->HighlightArrow();
+				if (bFilterChanged == false)
+				{
+					IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+					ArrowInterface->HighlightArrow(true);
+					ArrowInterface->ShowPickupWidget(true);
+				}				
 			}
 			else
 			{
 				if (SelectedArrow)
 				{
-					IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
-					ArrowInterface->UnHighlightArrow();
+					if (bFilterChanged == false)
+					{
+						IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+						ArrowInterface->HighlightArrow(false);
+						ArrowInterface->ShowPickupWidget(false);
+					}
+
 					SelectedArrow = nullptr;
 				}
 				

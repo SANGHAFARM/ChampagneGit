@@ -23,8 +23,9 @@ public:
 	// Sets default values for this actor's properties
 	AArrow();
 
-	virtual void HighlightArrow() override;
-	virtual void UnHighlightArrow() override;
+	virtual void HighlightArrow(bool Switch) override;
+
+	virtual void ShowPickupWidget(bool Switch) override;
 
 protected:
 	// Called when the game starts or when spawned
