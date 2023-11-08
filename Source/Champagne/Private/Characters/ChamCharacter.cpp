@@ -491,23 +491,17 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			{
 				SelectedArrow = ArrowActor;
 
-				if (bFilterChanged == false)
-				{
-					IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
-					ArrowInterface->HighlightArrow(true);
-					ArrowInterface->ShowPickupWidget(true);
-				}				
+				IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+				ArrowInterface->HighlightArrow(true);
+				ArrowInterface->ShowPickupWidget(true);
 			}
 			else
 			{
 				if (SelectedArrow)
 				{
-					if (bFilterChanged == false)
-					{
-						IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
-						ArrowInterface->HighlightArrow(false);
-						ArrowInterface->ShowPickupWidget(false);
-					}
+					IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+					ArrowInterface->HighlightArrow(false);
+					ArrowInterface->ShowPickupWidget(false);					
 
 					SelectedArrow = nullptr;
 				}
