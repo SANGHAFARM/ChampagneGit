@@ -5,17 +5,19 @@
 #include "PlayerController/ChamPlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Camera/CameraComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
-#include "Math/UnrealMathUtility.h"
 #include "NiagaraComponent.h"
+#include "Weapon/GrappleHook/GrappleHookComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "Math/UnrealMathUtility.h"
 #include "HUD/ChamHUD.h"
 #include "Engine/Texture2D.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Weapon/Arrow.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+
 #include "DrawDebugHelpers.h"
 
 
@@ -38,7 +40,9 @@ AChamCharacter::AChamCharacter()
 	Camera->SetupAttachment(SpringArm);
 	Camera->FieldOfView = 90.f;
 	Camera->bUsePawnControlRotation = false;
-	
+
+	GrappleHook = CreateDefaultSubobject<UGrappleHookComponent>(TEXT("GrappleHook"));		
+
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	bUseControllerRotationPitch = false;
@@ -86,6 +90,8 @@ void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AChamCharacter::Interact);
 		EnhancedInputComponent->BindAction(TabAction, ETriggerEvent::Started, this, &AChamCharacter::TabOn);
 		EnhancedInputComponent->BindAction(TabAction, ETriggerEvent::Completed, this, &AChamCharacter::TabOff);
+
+		EnhancedInputComponent->BindAction(HookAction, ETriggerEvent::Started, this, &AChamCharacter::Hook);
 
 
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Started, this, &AChamCharacter::AimingButtonPressed);
@@ -302,6 +308,20 @@ void AChamCharacter::TabOff()
 	}
 }
 
+void AChamCharacter::Hook()
+{
+	const USkeletalMeshSocket* ArrowSocket = GetMesh()->GetSocketByName(TEXT("arrow_socket"));
+
+	if (ArrowSocket)
+	{
+		FVector SocketLocation = ArrowSocket->GetSocketLocation(GetMesh());
+		FVector ToTarget = HitTarget - SocketLocation;
+		FRotator TargetRotation = ToTarget.Rotation();
+
+		GrappleHook->FireGrapple(SocketLocation, TargetRotation);
+	}
+}
+
 void AChamCharacter::HideOrUnHideArrowMesh(const uint8 CurArrows)
 {
 	if (GetMesh() == nullptr) return;
@@ -487,30 +507,39 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		{
 			AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor());
 
-			if (ArrowActor && OverlappingArrows.Contains(ArrowActor))
-			{
-				SelectedArrow = ArrowActor;
+			TracingArrow(ArrowActor);
 
-				IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
-				ArrowInterface->HighlightArrow(true);
-				ArrowInterface->ShowPickupWidget(true);
-			}
-			else
-			{
-				if (SelectedArrow)
-				{
-					IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
-					ArrowInterface->HighlightArrow(false);
-					ArrowInterface->ShowPickupWidget(false);					
-
-					SelectedArrow = nullptr;
-				}
-				
-				HitTarget = TraceHitResult.ImpactPoint;
-				DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
-			}
-
+			HitTarget = TraceHitResult.ImpactPoint;
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
 			UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
+		}
+	}
+}
+
+void AChamCharacter::TracingArrow(AArrow* TracingArrow)
+{
+	if (TracingArrow && OverlappingArrows.Contains(TracingArrow))
+	{
+		SelectedArrow = TracingArrow;
+
+		IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+		ArrowInterface->HighlightArrow(true);
+		ArrowInterface->ShowPickupWidget(true);
+	}
+	else
+	{
+		if (SelectedArrow)
+		{
+			IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+
+			if (bFilterChanged == false)
+			{
+				ArrowInterface->HighlightArrow(false);
+			}
+
+			ArrowInterface->ShowPickupWidget(false);
+
+			SelectedArrow = nullptr;
 		}
 	}
 }

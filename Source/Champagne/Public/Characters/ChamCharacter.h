@@ -17,6 +17,7 @@ class AChamHUD;
 class AChamPlayerController;
 class UTexture2D;
 class AArrow;
+class UGrappleHookComponent;
 
 UCLASS()
 class CHAMPAGNE_API AChamCharacter : public ACharacter, public IPickUpInterface
@@ -63,6 +64,9 @@ protected:
 	UInputAction* TabAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* HookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* Aiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -76,6 +80,7 @@ protected:
 	void Interact();
 	void TabOn();
 	void TabOff();
+	void Hook();
 
 	void HideOrUnHideArrowMesh(const uint8 CurArrows);
 
@@ -96,6 +101,8 @@ protected:
 	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
 
 	void Fire(const FVector& Hit);
+
+	void TracingArrow(AArrow* TracingArrow);
 
 	UFUNCTION(BlueprintCallable)
 	void SetCanFire();
@@ -218,6 +225,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	uint8 CurrentArrows;
 	/** </Arrow> */
+
+	UPROPERTY(VisibleAnywhere)
+	UGrappleHookComponent* GrappleHook;
 
 	FVector HitTarget;
 
