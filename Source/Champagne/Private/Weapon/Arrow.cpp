@@ -35,6 +35,7 @@ AArrow::AArrow()
 	ArrowBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	ArrowBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ArrowBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	ArrowBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
 
 	SphereArea = CreateDefaultSubobject<USphereComponent>(TEXT("SphereArea"));
 	SphereArea->SetupAttachment(GetRootComponent());
@@ -96,7 +97,7 @@ void AArrow::BeginPlay()
 
 void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {	
-	if (OtherActor && OtherActor != this && OtherActor != GetOwner())
+	if (OtherActor && OtherActor != this && OtherActor != GetOwner() && !OtherActor->IsA<AArrow>())
 	{
 		ArrowMovement->StopMovementImmediately();
 		ArrowMovement->ProjectileGravityScale = 0.f;

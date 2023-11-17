@@ -9,6 +9,7 @@
 #include "Camera/CameraComponent.h"
 #include "NiagaraComponent.h"
 #include "Weapon/GrappleHook/GrappleHookComponent.h"
+#include "Weapon/GrappleHook/GrappleCable.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Math/UnrealMathUtility.h"
@@ -73,6 +74,12 @@ void AChamCharacter::Tick(float DeltaTime)
 
 	FHitResult HitResult;
 	TraceUnderCrosshairs(HitResult);
+
+	if (GrappleHook)
+	{
+		const USkeletalMeshSocket* AnchorSocket = GetMesh()->GetSocketByName(TEXT("arrow_anchor"));
+		GrappleHook->SetCableLocation(AnchorSocket->GetSocketLocation(GetMesh()));
+	}
 }
 
 // Called to bind functionality to input
@@ -110,11 +117,28 @@ void AChamCharacter::SetOverlappingArrow(AArrow* Arrow)
 
 void AChamCharacter::RemoveOverlappingArrow(AArrow* Arrow)
 {
-	if (Arrow)
+	if (Arrow && OverlappingArrows.Contains(Arrow))
 	{
-		if (OverlappingArrows.Contains(Arrow))
+		OverlappingArrows.Remove(Arrow);
+	}
+}
+
+void AChamCharacter::CheckAndGetArrow(AArrow* Arrow)
+{
+	if (Arrow && OverlappingArrows.Contains(Arrow) && ArrowsInWorld.Contains(Arrow))
+	{
+		OverlappingArrows.Remove(Arrow);
+		ArrowsInWorld.Remove(Arrow);
+
+		Arrow->Destroy();
+		Arrow = nullptr;
+
+		if (CurrentArrows < MaxArrows && ChamController)
 		{
-			OverlappingArrows.Remove(Arrow);
+			CurrentArrows++;
+			ChamController->SetCurrentArrows(CurrentArrows);
+
+			HideOrUnHideArrowMesh(CurrentArrows);
 		}
 	}
 }
@@ -246,24 +270,8 @@ void AChamCharacter::Dash()
 }
 
 void AChamCharacter::Interact()
-{
-	
-	if (SelectedArrow && OverlappingArrows.Contains(SelectedArrow) && ArrowsInWorld.Contains(SelectedArrow))
-	{
-		OverlappingArrows.Remove(SelectedArrow);
-		ArrowsInWorld.Remove(SelectedArrow);
-
-		SelectedArrow->Destroy();
-		SelectedArrow = nullptr;
-
-		if (CurrentArrows < MaxArrows && ChamController)
-		{
-			CurrentArrows++;
-			ChamController->SetCurrentArrows(CurrentArrows);
-
-			HideOrUnHideArrowMesh(CurrentArrows);
-		}	
-	}
+{	
+	CheckAndGetArrow(SelectedArrow);
 }
 
 void AChamCharacter::TabOn()
@@ -353,7 +361,6 @@ void AChamCharacter::AimingButtonReleased()
 	{
 		Fire(HitTarget);
 		PlayMontageSection(FireMontage, TEXT("Reload"));
-
 
 		if (CurrentArrows > 0 && ChamController)
 		{
@@ -511,14 +518,14 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 			HitTarget = TraceHitResult.ImpactPoint;
 			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
-			UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
+			//UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
 		}
 	}
 }
 
 void AChamCharacter::TracingArrow(AArrow* TracingArrow)
 {
-	if (TracingArrow && OverlappingArrows.Contains(TracingArrow))
+	if (TracingArrow && OverlappingArrows.Contains(TracingArrow) && SelectedArrow == nullptr)
 	{
 		SelectedArrow = TracingArrow;
 
@@ -526,21 +533,18 @@ void AChamCharacter::TracingArrow(AArrow* TracingArrow)
 		ArrowInterface->HighlightArrow(true);
 		ArrowInterface->ShowPickupWidget(true);
 	}
-	else
+	else if (SelectedArrow && SelectedArrow != TracingArrow)
 	{
-		if (SelectedArrow)
+		IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
+
+		if (bFilterChanged == false)
 		{
-			IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
-
-			if (bFilterChanged == false)
-			{
-				ArrowInterface->HighlightArrow(false);
-			}
-
-			ArrowInterface->ShowPickupWidget(false);
-
-			SelectedArrow = nullptr;
+			ArrowInterface->HighlightArrow(false);
 		}
+
+		ArrowInterface->ShowPickupWidget(false);
+
+		SelectedArrow = nullptr;
 	}
 }
 

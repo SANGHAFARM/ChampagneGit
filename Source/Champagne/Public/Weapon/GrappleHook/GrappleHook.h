@@ -18,12 +18,14 @@ public:
 	// Sets default values for this actor's properties
 	AGrappleHook();
 
+	void StopHookMovement();
+
+	void SetHookVelocityZero();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	void OnGrappleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
+	
 private:	
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* GrappleHook;
@@ -33,4 +35,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float GrappleHookSpeed = 5000.f;
+
+public:
+	FORCEINLINE UStaticMeshComponent* GetHook() const { return GrappleHook; }
+	
 };

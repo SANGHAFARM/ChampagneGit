@@ -34,8 +34,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void SetOverlappingArrow(AArrow* Arrow) override;
-	virtual void RemoveOverlappingArrow(AArrow* Arrow) override;
+	void SetOverlappingArrow(AArrow* Arrow);
+	void RemoveOverlappingArrow(AArrow* Arrow);
+
+	void CheckAndGetArrow(AArrow* Arrow);
 
 protected:
 	// Called when the game starts or when spawned

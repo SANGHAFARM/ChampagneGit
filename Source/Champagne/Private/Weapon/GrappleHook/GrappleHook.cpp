@@ -2,13 +2,14 @@
 
 
 #include "Weapon/GrappleHook/GrappleHook.h"
+#include "Weapon/GrappleHook/GrappleHookComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 // Sets default values
 AGrappleHook::AGrappleHook()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	GrappleHook = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GrappleHook"));
 	SetRootComponent(GrappleHook);
@@ -23,12 +24,16 @@ AGrappleHook::AGrappleHook()
 void AGrappleHook::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	GrappleHook->OnComponentHit.AddDynamic(this, &AGrappleHook::OnGrappleHit);
+
 }
 
-void AGrappleHook::OnGrappleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AGrappleHook::StopHookMovement()
 {
-	
+	GrappleHookMovement->Deactivate();
+	GrappleHookMovement->Activate();
 }
 
+void AGrappleHook::SetHookVelocityZero()
+{
+	GrappleHookMovement->Velocity = FVector(0);
+}

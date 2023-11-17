@@ -5,25 +5,54 @@
 #include "Weapon/GrappleHook/GrappleHook.h"
 #include "Weapon/GrappleHook/GrappleCable.h"
 #include "CableComponent.h"
+#include "Weapon/Arrow.h"
+#include "Characters/ChamCharacter.h"
 
 // Sets default values for this component's properties
 UGrappleHookComponent::UGrappleHookComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
 }
 
+void UGrappleHookComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (SpawnedGrappleCable)
+	{
+		SpawnedGrappleCable->SetActorLocation(CableStartLocation);
+	}
+
+	if (SpawnedGrappleHook)
+	{
+		if (GrappleState == EGrappleState::EGS_AttachedToTarget)
+		{
+			FVector ComebackLocation = FMath::VInterpConstantTo(SpawnedGrappleHook->GetActorLocation(), CableStartLocation, DeltaTime, 3000.f);
+			SpawnedGrappleHook->SetActorLocation(ComebackLocation);
+
+			if (FVector::Distance(CableStartLocation, SpawnedGrappleHook->GetActorLocation()) < 100.f)
+			{
+				CheckCatchedArrow();
+				CancelGrapple();
+			}
+		}
+		else if (FVector::Distance(CableStartLocation, SpawnedGrappleHook->GetActorLocation()) > 1500.f)
+		{
+			GrappleState = EGrappleState::EGS_AttachedToTarget;
+			SpawnedGrappleHook->SetHookVelocityZero();
+		}		
+	}
+}
 
 // Called when the game starts
 void UGrappleHookComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
+		
 }
 
 bool UGrappleHookComponent::IsInUse()
@@ -45,8 +74,44 @@ void UGrappleHookComponent::CancelGrapple()
 		SpawnedGrappleCable = nullptr;
 
 		GrappleState = EGrappleState::EGS_ReadyToFire;
+	}	
+}
+
+void UGrappleHookComponent::CheckCatchedArrow()
+{
+	if (SpawnedGrappleHook)
+	{
+		TArray<AActor*> AttachedActors;
+		SpawnedGrappleHook->GetAttachedActors(AttachedActors);
+
+		for (AActor* AttacedActor : AttachedActors)
+		{
+			AArrow* CatchedArrow = Cast<AArrow>(AttacedActor);
+			AChamCharacter* ChamCharacter = Cast<AChamCharacter>(GetOwner());
+
+			if (CatchedArrow && ChamCharacter)
+			{
+				ChamCharacter->CheckAndGetArrow(CatchedArrow);
+			}
+		}
 	}
-	
+}
+
+void UGrappleHookComponent::OnGrappleHookHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	GrappleState = EGrappleState::EGS_AttachedToTarget;
+
+	if (OtherActor != SpawnedGrappleCable && OtherActor != SpawnedGrappleHook)
+	{
+		AArrow* CatchedArrow = Cast<AArrow>(OtherActor);
+
+		if (CatchedArrow)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Arrow Hit!"));
+			CatchedArrow->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			CatchedArrow->AttachToActor(SpawnedGrappleHook, FAttachmentTransformRules::KeepWorldTransform);
+		}
+	}	
 }
 
 void UGrappleHookComponent::FireGrapple(FVector SpawnLocation, FRotator SpawnRotation)
@@ -60,9 +125,14 @@ void UGrappleHookComponent::FireGrapple(FVector SpawnLocation, FRotator SpawnRot
 			SpawnedGrappleHook = GetWorld()->SpawnActor<AGrappleHook>(GrappleHook, SpawnLocation, SpawnRotation);
 			SpawnedGrappleCable = GetWorld()->SpawnActor<AGrappleCable>(GrappleCable, SpawnLocation, SpawnRotation);
 			
-			SpawnedGrappleCable->AttachToActor(GetOwner(), FAttachmentTransformRules::KeepWorldTransform);
+			SpawnedGrappleCable->AttachToActor(GetOwner(), FAttachmentTransformRules::KeepWorldTransform, FName("arrow_anchor"));
 			SpawnedGrappleCable->CableComponent->SetAttachEndTo(SpawnedGrappleHook, FName(TEXT("GrappleHook")));
 			SpawnedGrappleCable->CableComponent->EndLocation = FVector(0, 0, 0);
+
+			if (SpawnedGrappleHook)
+			{
+				SpawnedGrappleHook->GetHook()->OnComponentHit.AddDynamic(this, &UGrappleHookComponent::OnGrappleHookHit);
+			}
 		}
 	}
 }

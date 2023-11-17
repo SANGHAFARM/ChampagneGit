@@ -16,6 +16,7 @@ enum class EGrappleState : uint8
 
 class AGrappleHook;
 class AGrappleCable;
+class AArrow;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CHAMPAGNE_API UGrappleHookComponent : public UActorComponent
@@ -26,9 +27,16 @@ public:
 	// Sets default values for this component's properties
 	UGrappleHookComponent();
 
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	void FireGrapple(FVector SpawnLocation, FRotator SpawnRotation);
 
 	void CancelGrapple();
+
+	void CheckCatchedArrow();
+
+	UFUNCTION()
+	void OnGrappleHookHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 protected:
 	// Called when the game starts
@@ -51,4 +59,11 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	AGrappleCable* SpawnedGrappleCable;
+
+	FVector CableStartLocation;
+
+
+public:
+	FORCEINLINE AGrappleCable* GetSpawnedGrappleCable() const { return SpawnedGrappleCable; }
+	FORCEINLINE void SetCableLocation(const FVector Location) { CableStartLocation = Location; }
 };
