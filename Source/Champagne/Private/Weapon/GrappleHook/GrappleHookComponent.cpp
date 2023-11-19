@@ -22,21 +22,17 @@ void UGrappleHookComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (SpawnedGrappleCable)
-	{
-		SpawnedGrappleCable->SetActorLocation(CableStartLocation);
-	}
-
 	if (SpawnedGrappleHook)
 	{
+		FVector CableStartLocation = GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetSocketLocation(TEXT("arrow_anchor"));
+
 		if (GrappleState == EGrappleState::EGS_AttachedToTarget)
-		{
+		{			
 			FVector ComebackLocation = FMath::VInterpConstantTo(SpawnedGrappleHook->GetActorLocation(), CableStartLocation, DeltaTime, 3000.f);
 			SpawnedGrappleHook->SetActorLocation(ComebackLocation);
 
 			if (FVector::Distance(CableStartLocation, SpawnedGrappleHook->GetActorLocation()) < 100.f)
-			{
-				CheckCatchedArrow();
+			{				
 				CancelGrapple();
 			}
 		}
@@ -67,6 +63,8 @@ void UGrappleHookComponent::CancelGrapple()
 {
 	if (SpawnedGrappleHook && SpawnedGrappleCable)
 	{
+		CheckCatchedArrow();
+
 		SpawnedGrappleHook->Destroy();
 		SpawnedGrappleHook = nullptr;
 
@@ -124,8 +122,8 @@ void UGrappleHookComponent::FireGrapple(FVector SpawnLocation, FRotator SpawnRot
 		{
 			SpawnedGrappleHook = GetWorld()->SpawnActor<AGrappleHook>(GrappleHook, SpawnLocation, SpawnRotation);
 			SpawnedGrappleCable = GetWorld()->SpawnActor<AGrappleCable>(GrappleCable, SpawnLocation, SpawnRotation);
-			
-			SpawnedGrappleCable->AttachToActor(GetOwner(), FAttachmentTransformRules::KeepWorldTransform, FName("arrow_anchor"));
+						
+			SpawnedGrappleCable->AttachToComponent(GetOwner()->FindComponentByClass<USkeletalMeshComponent>(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("arrow_anchor"));			
 			SpawnedGrappleCable->CableComponent->SetAttachEndTo(SpawnedGrappleHook, FName(TEXT("GrappleHook")));
 			SpawnedGrappleCable->CableComponent->EndLocation = FVector(0, 0, 0);
 

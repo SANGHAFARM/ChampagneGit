@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
 
+
 void AChamPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -47,5 +48,22 @@ void AChamPlayerController::SetMaxArrows(const uint8 MaxArrows)
 	if (ChamHUD && ChamHUD->CharacterOverlay && ChamHUD->CharacterOverlay->MaxArrows && ChamHUD->CharacterOverlay->CurrentArrows)
 	{
 		ChamHUD->CharacterOverlay->MaxArrows->SetText(FText::AsNumber(MaxArrows));
+	}
+}
+
+void AChamPlayerController::PlayHitMarker(bool bIsAlive)
+{
+	CheckHUD();
+
+	if (ChamHUD)
+	{
+		if (bIsAlive == true)
+		{
+			ChamHUD->AddHitMarker();
+		}
+		else
+		{
+			ChamHUD->AddDeathMarker();
+		}		
 	}
 }

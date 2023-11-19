@@ -10,6 +10,7 @@
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/PickUpInterface.h"
+#include "PlayerController/ChamPlayerController.h"
 
 // Sets default values
 AArrow::AArrow()
@@ -99,6 +100,22 @@ void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActo
 {	
 	if (OtherActor && OtherActor != this && OtherActor != GetOwner() && !OtherActor->IsA<AArrow>())
 	{
+		AChamPlayerController* ChamController = Cast<AChamPlayerController>(GetInstigatorController());
+
+		if (ChamController)
+		{
+			FString Name = TEXT("Cube2");
+
+			if (OtherActor->GetActorLabel() == Name)
+			{
+				ChamController->PlayHitMarker(false);
+			}
+			else
+			{
+				ChamController->PlayHitMarker(true);
+			}
+		}
+
 		ArrowMovement->StopMovementImmediately();
 		ArrowMovement->ProjectileGravityScale = 0.f;
 		AttachToActor(OtherActor, FAttachmentTransformRules::KeepWorldTransform);

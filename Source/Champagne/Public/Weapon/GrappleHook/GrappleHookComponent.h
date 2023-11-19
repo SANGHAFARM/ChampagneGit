@@ -60,10 +60,6 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	AGrappleCable* SpawnedGrappleCable;
 
-	FVector CableStartLocation;
-
-
 public:
 	FORCEINLINE AGrappleCable* GetSpawnedGrappleCable() const { return SpawnedGrappleCable; }
-	FORCEINLINE void SetCableLocation(const FVector Location) { CableStartLocation = Location; }
 };

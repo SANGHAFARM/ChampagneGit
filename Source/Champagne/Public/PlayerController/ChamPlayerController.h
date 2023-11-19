@@ -23,6 +23,8 @@ public:
 	void SetCurrentArrows(const uint8 CurrentArrows);
 	void SetMaxArrows(const uint8 MaxArrows);
 
+	void PlayHitMarker(bool bIsAlive);
+
 protected:
 	virtual void BeginPlay() override;
 

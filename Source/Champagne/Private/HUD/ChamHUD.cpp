@@ -5,6 +5,7 @@
 #include "Engine/Texture2D.h"
 #include "GameFramework/PlayerController.h"
 #include "HUD/CharacterOverlay.h"
+#include "HUD/HitMarker.h"
 
 void AChamHUD::DrawHUD()
 {
@@ -77,4 +78,34 @@ void AChamHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVec
 		1.f,
 		FLinearColor::White
 	);
+}
+
+void AChamHUD::AddHitMarker()
+{
+	if (HitMarkerClass)
+	{
+		UHitMarker* NewHitMarker = CreateWidget<UHitMarker>(GetOwningPlayerController(), HitMarkerClass);
+
+		if (NewHitMarker)
+		{
+			NewHitMarker->AddToViewport();
+			NewHitMarker->PlayAnimation(NewHitMarker->HitMarkFade);
+			NewHitMarker->RemoveHitMarkAnim();
+		}
+	}
+}
+
+void AChamHUD::AddDeathMarker()
+{
+	if (HitMarkerClass)
+	{
+		UHitMarker* NewHitMarker = CreateWidget<UHitMarker>(GetOwningPlayerController(), HitMarkerClass);
+
+		if (NewHitMarker)
+		{
+			NewHitMarker->AddToViewport();
+			NewHitMarker->PlayAnimation(NewHitMarker->DeathMarkFade);
+			NewHitMarker->RemoveHitMarkAnim();
+		}
+	}
 }

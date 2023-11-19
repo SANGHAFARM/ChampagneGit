@@ -10,7 +10,8 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
-				"CableComponent"
+				"CableComponent",
+				"UMG"
 			]
 		}
 	],

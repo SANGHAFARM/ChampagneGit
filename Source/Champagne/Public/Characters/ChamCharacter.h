@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Interfaces/PickUpInterface.h"
+#include "Interfaces/Hitinterface.h"
 #include "ChamCharacter.generated.h"
 
 class UInputMappingContext;
@@ -20,7 +21,7 @@ class AArrow;
 class UGrappleHookComponent;
 
 UCLASS()
-class CHAMPAGNE_API AChamCharacter : public ACharacter, public IPickUpInterface
+class CHAMPAGNE_API AChamCharacter : public ACharacter, public IPickUpInterface, public IHitInterface
 {
 	GENERATED_BODY()
 
@@ -114,6 +115,9 @@ protected:
 	void DashCoolTimerFinished();
 
 	void DashEffectTimerFinished();
+
+	UFUNCTION(BlueprintCallable)
+	void PlayFireGrapple();
 
 private:	
 	AChamPlayerController* ChamController;
@@ -236,6 +240,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* FireMontage;
 	
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* GrappleMontage;
+
 public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 	FORCEINLINE bool GetAiming() const { return bAiming; }

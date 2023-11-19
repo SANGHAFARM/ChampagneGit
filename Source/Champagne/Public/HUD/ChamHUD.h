@@ -9,6 +9,7 @@
 class UTexture2D;
 class UUserWidget;
 class UCharacterOverlay;
+class UHitMarker;
 
 USTRUCT(BlueprintType)
 struct FHUDPackage
@@ -33,8 +34,14 @@ class CHAMPAGNE_API AChamHUD : public AHUD
 public:
 	virtual void DrawHUD() override;
 
+	void AddHitMarker();
+	void AddDeathMarker();
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUserWidget> CharacterOverlayClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UHitMarker> HitMarkerClass;
 
 	UCharacterOverlay* CharacterOverlay;
 protected:

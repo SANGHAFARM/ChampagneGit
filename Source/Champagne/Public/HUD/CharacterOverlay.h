@@ -8,6 +8,7 @@
 
 class UProgressBar;
 class UTextBlock;
+class UHitMarker;
 
 /**
  * 
@@ -25,4 +26,5 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MaxArrows;
+
 };

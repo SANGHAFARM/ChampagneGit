@@ -9,7 +9,6 @@
 #include "Camera/CameraComponent.h"
 #include "NiagaraComponent.h"
 #include "Weapon/GrappleHook/GrappleHookComponent.h"
-#include "Weapon/GrappleHook/GrappleCable.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Math/UnrealMathUtility.h"
@@ -74,12 +73,6 @@ void AChamCharacter::Tick(float DeltaTime)
 
 	FHitResult HitResult;
 	TraceUnderCrosshairs(HitResult);
-
-	if (GrappleHook)
-	{
-		const USkeletalMeshSocket* AnchorSocket = GetMesh()->GetSocketByName(TEXT("arrow_anchor"));
-		GrappleHook->SetCableLocation(AnchorSocket->GetSocketLocation(GetMesh()));
-	}
 }
 
 // Called to bind functionality to input
@@ -181,6 +174,7 @@ void AChamCharacter::Fire(const FVector& Hit)
 
 				if (NewArrow)
 				{
+					NewArrow->SetOwner(this);
 					ArrowsInWorld.Add(NewArrow);
 				}
 			}
@@ -318,15 +312,10 @@ void AChamCharacter::TabOff()
 
 void AChamCharacter::Hook()
 {
-	const USkeletalMeshSocket* ArrowSocket = GetMesh()->GetSocketByName(TEXT("arrow_socket"));
-
-	if (ArrowSocket)
+	if (GrappleMontage)
 	{
-		FVector SocketLocation = ArrowSocket->GetSocketLocation(GetMesh());
-		FVector ToTarget = HitTarget - SocketLocation;
-		FRotator TargetRotation = ToTarget.Rotation();
-
-		GrappleHook->FireGrapple(SocketLocation, TargetRotation);
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		PlayMontageSection(GrappleMontage, TEXT("GrappleShot"));
 	}
 }
 
@@ -357,7 +346,7 @@ void AChamCharacter::AimingButtonPressed()
 
 void AChamCharacter::AimingButtonReleased()
 {
-	if (Camera && bAiming)
+	if (Camera && bAiming && FireMontage)
 	{
 		Fire(HitTarget);
 		PlayMontageSection(FireMontage, TEXT("Reload"));
@@ -583,5 +572,24 @@ void AChamCharacter::DashCoolTimerFinished()
 void AChamCharacter::DashEffectTimerFinished()
 {
 	DashEffect->Deactivate();
+}
+
+void AChamCharacter::PlayFireGrapple()
+{
+	const USkeletalMeshSocket* ArrowSocket = GetMesh()->GetSocketByName(TEXT("arrow_socket"));
+
+	if (ArrowSocket)
+	{
+		FVector SocketLocation = ArrowSocket->GetSocketLocation(GetMesh());
+		FVector ToTarget = HitTarget - SocketLocation;
+		FRotator TargetRotation = ToTarget.Rotation();
+
+		GrappleHook->FireGrapple(SocketLocation, TargetRotation);
+	}
+
+	if (GetCharacterMovement()->Velocity.Size() <= 0)
+	{
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	}
 }
 
