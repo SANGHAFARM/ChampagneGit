@@ -8,6 +8,8 @@
 #include "Weapon/Arrow.h"
 #include "Characters/ChamCharacter.h"
 
+#include "Enemy/Enemy.h"
+
 // Sets default values for this component's properties
 UGrappleHookComponent::UGrappleHookComponent()
 {
@@ -103,11 +105,18 @@ void UGrappleHookComponent::OnGrappleHookHit(UPrimitiveComponent* HitComponent, 
 	{
 		AArrow* CatchedArrow = Cast<AArrow>(OtherActor);
 
+		AEnemy* Enemy = Cast<AEnemy>(OtherActor);
+
 		if (CatchedArrow)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Arrow Hit!"));
 			CatchedArrow->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			CatchedArrow->AttachToActor(SpawnedGrappleHook, FAttachmentTransformRules::KeepWorldTransform);
+		}
+		else if (Enemy)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("BoneName : %s"), *Hit.BoneName.ToString());
+			UE_LOG(LogTemp, Warning, TEXT("Component : %s"), *Hit.Component.Get()->GetName());
 		}
 	}	
 }

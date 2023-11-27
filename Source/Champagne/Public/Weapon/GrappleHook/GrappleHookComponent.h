@@ -62,4 +62,5 @@ private:
 
 public:
 	FORCEINLINE AGrappleCable* GetSpawnedGrappleCable() const { return SpawnedGrappleCable; }
+	FORCEINLINE EGrappleState GetGrappleState() const { return GrappleState; }
 };

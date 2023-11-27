@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
 #include "Interfaces/Hitinterface.h"
 #include "Enemy.generated.h"
 
 UCLASS()
-class CHAMPAGNE_API AEnemy : public APawn, public IHitInterface
+class CHAMPAGNE_API AEnemy : public ACharacter, public IHitInterface
 {
 	GENERATED_BODY()
 

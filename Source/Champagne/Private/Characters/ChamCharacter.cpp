@@ -335,7 +335,7 @@ void AChamCharacter::HideOrUnHideArrowMesh(const uint8 CurArrows)
 
 void AChamCharacter::AimingButtonPressed()
 {
-	if (Camera && bCanFire && CurrentArrows > 0)
+	if (Camera && bCanFire && CurrentArrows > 0 && GrappleHook->GetGrappleState() == EGrappleState::EGS_ReadyToFire)
 	{
 		bAiming = true;
 		GetCharacterMovement()->bUseControllerDesiredRotation = true;	
