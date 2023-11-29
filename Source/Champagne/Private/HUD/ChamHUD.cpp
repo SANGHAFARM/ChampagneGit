@@ -15,26 +15,26 @@ void AChamHUD::DrawHUD()
 	if (GEngine)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
-		const FVector2D ViewprotCenter(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+		const FVector2D ViewportCenter(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
 
 		float SpreadScaled = CrosshairSpreadMax * HUDPackage.CrosshairSpread;
 
 		if (HUDPackage.CrosshairCenter)
 		{
 			FVector2D Spread(0.f);
-			DrawCrosshair(HUDPackage.CrosshairCenter, ViewprotCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairCenter, ViewportCenter, Spread, HUDPackage.CrosshairsColor);
 		}
 
 		if (HUDPackage.CrosshairLeft)
 		{
 			FVector2D Spread(-SpreadScaled, 0.f);
-			DrawCrosshair(HUDPackage.CrosshairLeft, ViewprotCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairLeft, ViewportCenter, Spread, HUDPackage.CrosshairsColor);
 		}
 
 		if (HUDPackage.CrosshairRight)
 		{
 			FVector2D Spread(SpreadScaled, 0.f);
-			DrawCrosshair(HUDPackage.CrosshairRight, ViewprotCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairRight, ViewportCenter, Spread, HUDPackage.CrosshairsColor);
 		}
 	}
 }
@@ -57,7 +57,7 @@ void AChamHUD::AddCharacterOverlay()
 	}
 }
 
-void AChamHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
+void AChamHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread, FLinearColor CrosshairsColor)
 {
 	const float TextureWidth = Texture->GetSizeX() + 5.f;
 	const float TextureHeight = Texture->GetSizeY() + 5.f;
@@ -76,7 +76,7 @@ void AChamHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVec
 		0.f,
 		1.f,
 		1.f,
-		FLinearColor::White
+		CrosshairsColor
 	);
 }
 

@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "Interfaces/PickUpInterface.h"
 #include "Interfaces/Hitinterface.h"
+#include "HUD/ChamHUD.h"
 #include "ChamCharacter.generated.h"
 
 class UInputMappingContext;
@@ -85,7 +86,9 @@ protected:
 	void TabOff();
 	void Hook();
 
-	void HideOrUnHideArrowMesh(const uint8 CurArrows);
+	void HideOrUnHideArrowMesh(const uint8 Arrows);
+
+	void HideCharacterIfCameraClose();
 
 	/** Aiming 버튼 입력에 따라 bAiming을 true 또는 false로 변경 */
 	void AimingButtonPressed();
@@ -117,7 +120,7 @@ protected:
 	void DashEffectTimerFinished();
 
 	UFUNCTION(BlueprintCallable)
-	void PlayFireGrapple();
+	void PlayFireGrappleAnim();
 
 private:	
 	AChamPlayerController* ChamController;
@@ -155,6 +158,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* ScreenFilterMaterial;
+
+	UPROPERTY(EditAnywhere)
+	float CameraHideDistance = 200.f;
 	/** </Camera> */
 
 	/** <Dash> */
@@ -200,6 +206,8 @@ private:
 	/** </Crosshair> */
 
 	AChamHUD* HUD;
+
+	FHUDPackage HUDPackage;
 
 	bool bFilterChanged = false;
 

@@ -8,14 +8,13 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "NiagaraComponent.h"
-#include "Weapon/GrappleHook/GrappleHookComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Math/UnrealMathUtility.h"
-#include "HUD/ChamHUD.h"
 #include "Engine/Texture2D.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Weapon/Arrow.h"
+#include "Weapon/GrappleHook/GrappleHookComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "DrawDebugHelpers.h"
@@ -67,6 +66,8 @@ void AChamCharacter::Tick(float DeltaTime)
 	SetHUDCrosshairs(DeltaTime);
 
 	SetTargetArrowSpeed(DeltaTime);
+
+	HideCharacterIfCameraClose();
 
 	// 크로스헤어 퍼짐
 	//CalculateCrosshairSpread(DeltaTime);
@@ -319,17 +320,29 @@ void AChamCharacter::Hook()
 	}
 }
 
-void AChamCharacter::HideOrUnHideArrowMesh(const uint8 CurArrows)
+void AChamCharacter::HideOrUnHideArrowMesh(const uint8 Arrows)
 {
 	if (GetMesh() == nullptr) return;
 
-	if (CurArrows > 0)
+	if (CurrentArrows > 0)
 	{
 		GetMesh()->UnHideBoneByName(FName("arrow_nock"));
 	}
 	else
 	{
 		GetMesh()->HideBoneByName(FName("arrow_nock"), EPhysBodyOp::PBO_None);
+	}
+}
+
+void AChamCharacter::HideCharacterIfCameraClose()
+{
+	if ((Camera->GetComponentLocation() - GetActorLocation()).Size() < CameraHideDistance)
+	{
+		GetMesh()->SetVisibility(false);
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
 	}
 }
 
@@ -424,8 +437,7 @@ void AChamCharacter::SetHUDCrosshairs(float DeltaTime)
 		UWorld* World = GetWorld();
 
 		if (HUD && World)
-		{
-			FHUDPackage HUDPackage;
+		{			
 			HUDPackage.CrosshairCenter = CrosshairCenter;
 			HUDPackage.CrosshairLeft = CrosshairLeft;
 			HUDPackage.CrosshairRight = CrosshairRight;
@@ -485,6 +497,10 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	if (bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;
+
+		float DistanceFromCameraToCharacter = (GetActorLocation() - Start).Size();
+		Start += CrosshairWorldDirection * (DistanceFromCameraToCharacter + 100.f);
+
 		FVector End = Start + CrosshairWorldDirection * 15000.f;
 
 		GetWorld()->LineTraceSingleByChannel(
@@ -494,20 +510,60 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			ECollisionChannel::ECC_Visibility
 		);
 
+		if (TraceHitResult.bBlockingHit)
+		{
+			if (TraceHitResult.GetActor())
+			{
+				if (TraceHitResult.GetActor()->Implements<UHitInterface>())
+				{
+					HUDPackage.CrosshairsColor = FLinearColor::Red;
+				}
+				else
+				{					
+					HUDPackage.CrosshairsColor = FLinearColor::White;												
+
+					if (AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor()))
+					{
+						TracingArrow(ArrowActor);
+					}
+				}				
+			}	
+
+			HitTarget = TraceHitResult.ImpactPoint;
+		}
+		else
+		{
+			TraceHitResult.ImpactPoint = End;
+			HitTarget = End;
+			HUDPackage.CrosshairsColor = FLinearColor::White;
+		}
+
+		DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
+
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
 			HitTarget = End;
 		}
-		else
+		else if (TraceHitResult.GetActor())
 		{
-			AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor());
+			if (TraceHitResult.GetActor()->Implements<UHitInterface>())
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::Red;
+			}
+			else
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::White;
 
-			TracingArrow(ArrowActor);
+				if (AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor()))
+				{
+					TracingArrow(ArrowActor);
 
-			HitTarget = TraceHitResult.ImpactPoint;
-			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
-			//UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
+					HitTarget = TraceHitResult.ImpactPoint;
+					DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
+					//UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
+				}				
+			}
 		}
 	}
 }
@@ -574,7 +630,7 @@ void AChamCharacter::DashEffectTimerFinished()
 	DashEffect->Deactivate();
 }
 
-void AChamCharacter::PlayFireGrapple()
+void AChamCharacter::PlayFireGrappleAnim()
 {
 	const USkeletalMeshSocket* ArrowSocket = GetMesh()->GetSocketByName(TEXT("arrow_socket"));
 
