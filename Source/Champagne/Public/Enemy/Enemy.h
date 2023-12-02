@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Interfaces/Hitinterface.h"
+#include "Interfaces/Enemyinterface.h"
 #include "Enemy.generated.h"
 
+class UNiagaraSystem;
+class UNiagaraComponent;
+
 UCLASS()
-class CHAMPAGNE_API AEnemy : public ACharacter, public IHitInterface
+class CHAMPAGNE_API AEnemy : public ACharacter, public IEnemyInterface
 {
 	GENERATED_BODY()
 
@@ -16,15 +19,25 @@ public:
 	// Sets default values for this pawn's properties
 	AEnemy();
 
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void ShowWeakPoint(bool bShow) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+private:
+	UPROPERTY(EditAnywhere)
+	TArray<FName> ValidWeakBones;
 
+	UPROPERTY(VisibleAnywhere)
+	FName WeakBone;
+
+	UPROPERTY(EditAnywhere, Category = Effect)
+	UNiagaraSystem* WeakPointEffect;
+
+	UPROPERTY(VisibleAnywhere, Category = Effect)
+	UNiagaraComponent* WeakPoint;
 };

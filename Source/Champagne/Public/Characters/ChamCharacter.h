@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Interfaces/PickUpInterface.h"
-#include "Interfaces/Hitinterface.h"
+#include "Interfaces/Enemyinterface.h"
 #include "HUD/ChamHUD.h"
 #include "ChamCharacter.generated.h"
 
@@ -22,7 +22,7 @@ class AArrow;
 class UGrappleHookComponent;
 
 UCLASS()
-class CHAMPAGNE_API AChamCharacter : public ACharacter, public IPickUpInterface, public IHitInterface
+class CHAMPAGNE_API AChamCharacter : public ACharacter, public IPickUpInterface, public IEnemyInterface
 {
 	GENERATED_BODY()
 
@@ -122,6 +122,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void PlayFireGrappleAnim();
 
+	void ShowEnemyWeakPoint();
+
 private:	
 	AChamPlayerController* ChamController;
 
@@ -209,7 +211,7 @@ private:
 
 	FHUDPackage HUDPackage;
 
-	bool bFilterChanged = false;
+	bool bFilterOn = false;
 
 	/** <Arrow> */
 	UPROPERTY(EditAnywhere)

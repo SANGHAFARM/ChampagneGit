@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "HitInterface.generated.h"
+#include "EnemyInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UHitInterface : public UInterface
+class UEnemyInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +16,7 @@ class UHitInterface : public UInterface
 /**
  * 
  */
-class CHAMPAGNE_API IHitInterface
+class CHAMPAGNE_API IEnemyInterface
 {
 	GENERATED_BODY()
 
@@ -24,4 +24,6 @@ class CHAMPAGNE_API IHitInterface
 public:
 	UFUNCTION(BlueprintNativeEvent)
 	void GetHit(const FVector& ImpactPoint, AActor* Hitter);
+
+	virtual void ShowWeakPoint(bool bShow);
 };

@@ -271,10 +271,10 @@ void AChamCharacter::Interact()
 
 void AChamCharacter::TabOn()
 {
-	if (bFilterChanged == true)
+	if (bFilterOn == true)
 		return;
 
-	bFilterChanged = true;
+	bFilterOn = true;
 
 	if (ScreenFilterMaterial && Camera)
 	{
@@ -292,10 +292,10 @@ void AChamCharacter::TabOn()
 
 void AChamCharacter::TabOff()
 {
-	if (bFilterChanged == false)
+	if (bFilterOn == false)
 		return;
 
-	bFilterChanged = false;
+	bFilterOn = false;
 
 	if (ScreenFilterMaterial && Camera)
 	{
@@ -514,7 +514,7 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		{
 			if (TraceHitResult.GetActor())
 			{
-				if (TraceHitResult.GetActor()->Implements<UHitInterface>())
+				if (TraceHitResult.GetActor()->Implements<UEnemyInterface>())
 				{
 					HUDPackage.CrosshairsColor = FLinearColor::Red;
 				}
@@ -539,32 +539,6 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		}
 
 		DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
-
-		if (!TraceHitResult.bBlockingHit)
-		{
-			TraceHitResult.ImpactPoint = End;
-			HitTarget = End;
-		}
-		else if (TraceHitResult.GetActor())
-		{
-			if (TraceHitResult.GetActor()->Implements<UHitInterface>())
-			{
-				HUDPackage.CrosshairsColor = FLinearColor::Red;
-			}
-			else
-			{
-				HUDPackage.CrosshairsColor = FLinearColor::White;
-
-				if (AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor()))
-				{
-					TracingArrow(ArrowActor);
-
-					HitTarget = TraceHitResult.ImpactPoint;
-					DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
-					//UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
-				}				
-			}
-		}
 	}
 }
 
@@ -582,7 +556,7 @@ void AChamCharacter::TracingArrow(AArrow* TracingArrow)
 	{
 		IPickUpInterface* ArrowInterface = Cast<IPickUpInterface>(SelectedArrow);
 
-		if (bFilterChanged == false)
+		if (bFilterOn == false)
 		{
 			ArrowInterface->HighlightArrow(false);
 		}
@@ -646,6 +620,14 @@ void AChamCharacter::PlayFireGrappleAnim()
 	if (GetCharacterMovement()->Velocity.Size() <= 0)
 	{
 		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	}
+}
+
+void AChamCharacter::ShowEnemyWeakPoint()
+{
+	if (bFilterOn)
+	{
+
 	}
 }
 

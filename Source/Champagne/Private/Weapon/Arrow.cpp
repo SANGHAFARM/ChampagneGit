@@ -142,7 +142,7 @@ void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActo
 
 void AArrow::BoneHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor && OtherActor != this)// && OtherActor != GetOwner() && !OtherActor->IsA<AArrow>())
+	if (OtherActor && OtherActor != this && OtherActor != GetOwner() && !OtherActor->IsA<AArrow>())
 	{
 		AEnemy* Enemy = Cast<AEnemy>(OtherActor);
 

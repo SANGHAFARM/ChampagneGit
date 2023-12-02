@@ -2,6 +2,9 @@
 
 
 #include "Enemy/Enemy.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+//#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -11,13 +14,6 @@ AEnemy::AEnemy()
 
 }
 
-// Called when the game starts or when spawned
-void AEnemy::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
 // Called every frame
 void AEnemy::Tick(float DeltaTime)
 {
@@ -25,10 +21,43 @@ void AEnemy::Tick(float DeltaTime)
 
 }
 
-// Called to bind functionality to input
-void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+// Called when the game starts or when spawned
+void AEnemy::BeginPlay()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	Super::BeginPlay();
+	
+	if (!ValidWeakBones.IsEmpty())
+	{
+		int32 RandIdx = FMath::RandRange(0, ValidWeakBones.Num() - 1);
+		WeakBone = ValidWeakBones[RandIdx];
+		
+		if (WeakBone.IsValid())
+		{
+			WeakPoint = UNiagaraFunctionLibrary::SpawnSystemAttached(
+				WeakPointEffect,
+				GetMesh(),
+				WeakBone,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::SnapToTarget,
+				false,
+				false
+			);
+		}		
+	}
 }
 
+void AEnemy::ShowWeakPoint(bool bShow)
+{
+	if (WeakPoint)
+	{
+		if (bShow)
+		{
+			WeakPoint->Activate();
+		}
+		else
+		{
+			WeakPoint->Deactivate();
+		}
+	}
+}
