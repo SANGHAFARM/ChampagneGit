@@ -111,7 +111,7 @@ void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActo
 
 			if (ChamController && SweepResult.BoneName != FName("None"))
 			{
-				if (SweepResult.BoneName == FName("head"))
+				if (SweepResult.BoneName == Enemy->GetWeakBone())
 				{
 					ChamController->PlayHitMarker(false);
 				}
@@ -134,47 +134,6 @@ void AArrow::WhenHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActo
 		UWorld* World = GetWorld();
 		if (World && HitParticle && ArrowTrail)
 		{			
-			UGameplayStatics::SpawnEmitterAtLocation(World, HitParticle, ParticleLocation);
-			ArrowTrail->Deactivate();
-		}
-	}
-}
-
-void AArrow::BoneHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-	if (OtherActor && OtherActor != this && OtherActor != GetOwner() && !OtherActor->IsA<AArrow>())
-	{
-		AEnemy* Enemy = Cast<AEnemy>(OtherActor);
-
-		if (Enemy)
-		{
-			AChamPlayerController* ChamController = Cast<AChamPlayerController>(GetInstigatorController());
-
-			if (ChamController)
-			{
-				if (Hit.BoneName == FName("head"))
-				{
-					ChamController->PlayHitMarker(false);
-				}
-				else
-				{
-					ChamController->PlayHitMarker(true);
-				}
-
-				UE_LOG(LogTemp, Warning, TEXT("Component : %s"), *Hit.Component.Get()->GetName());
-				UE_LOG(LogTemp, Warning, TEXT("BoneName : %s"), *Hit.BoneName.ToString());
-			}
-		}
-
-		ArrowMovement->StopMovementImmediately();
-		ArrowMovement->ProjectileGravityScale = 0.f;
-		AttachToActor(OtherActor, FAttachmentTransformRules::KeepWorldTransform);
-		BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		FVector ParticleLocation = BoxCollision->GetComponentToWorld().GetLocation();
-		UWorld* World = GetWorld();
-		if (World && HitParticle && ArrowTrail)
-		{
 			UGameplayStatics::SpawnEmitterAtLocation(World, HitParticle, ParticleLocation);
 			ArrowTrail->Deactivate();
 		}

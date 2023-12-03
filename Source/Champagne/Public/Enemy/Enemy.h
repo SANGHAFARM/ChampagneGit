@@ -40,4 +40,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = Effect)
 	UNiagaraComponent* WeakPoint;
+
+public:
+	FORCEINLINE FName GetWeakBone() { return WeakBone; }
 };

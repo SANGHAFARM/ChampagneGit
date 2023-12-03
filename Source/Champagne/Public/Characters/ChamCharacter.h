@@ -122,7 +122,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void PlayFireGrappleAnim();
 
-	void ShowEnemyWeakPoint();
 
 private:	
 	AChamPlayerController* ChamController;

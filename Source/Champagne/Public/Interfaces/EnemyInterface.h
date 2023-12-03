@@ -26,4 +26,6 @@ public:
 	void GetHit(const FVector& ImpactPoint, AActor* Hitter);
 
 	virtual void ShowWeakPoint(bool bShow);
+
+	
 };

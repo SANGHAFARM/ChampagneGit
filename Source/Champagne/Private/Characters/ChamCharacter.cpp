@@ -15,6 +15,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Weapon/Arrow.h"
 #include "Weapon/GrappleHook/GrappleHookComponent.h"
+#include "Enemy/Enemy.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "DrawDebugHelpers.h"
@@ -276,6 +277,25 @@ void AChamCharacter::TabOn()
 
 	bFilterOn = true;
 
+	TArray<AActor*> AllEnemyActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), AllEnemyActors);
+
+	if (!AllEnemyActors.IsEmpty())
+	{
+		for (AActor* Actor : AllEnemyActors)
+		{
+			if (AEnemy* Enemy = Cast<AEnemy>(Actor))
+			{
+				IEnemyInterface* EnemyInterface = Cast<IEnemyInterface>(Enemy);
+
+				if (EnemyInterface)
+				{
+					EnemyInterface->ShowWeakPoint(true);
+				}
+			}
+		}
+	}
+
 	if (ScreenFilterMaterial && Camera)
 	{
 		Camera->PostProcessSettings.AddBlendable(ScreenFilterMaterial, 1.0f);
@@ -296,6 +316,25 @@ void AChamCharacter::TabOff()
 		return;
 
 	bFilterOn = false;
+
+	TArray<AActor*> AllEnemyActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), AllEnemyActors);
+
+	if (!AllEnemyActors.IsEmpty())
+	{
+		for (AActor* Actor : AllEnemyActors)
+		{
+			if (AEnemy* Enemy = Cast<AEnemy>(Actor))
+			{
+				IEnemyInterface* EnemyInterface = Cast<IEnemyInterface>(Enemy);
+
+				if (EnemyInterface)
+				{
+					EnemyInterface->ShowWeakPoint(false);
+				}
+			}
+		}
+	}
 
 	if (ScreenFilterMaterial && Camera)
 	{
@@ -622,12 +661,3 @@ void AChamCharacter::PlayFireGrappleAnim()
 		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}
 }
-
-void AChamCharacter::ShowEnemyWeakPoint()
-{
-	if (bFilterOn)
-	{
-
-	}
-}
-
