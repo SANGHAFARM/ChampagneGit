@@ -54,10 +54,13 @@ void AEnemy::ShowWeakPoint(bool bShow)
 		if (bShow)
 		{
 			WeakPoint->Activate();
+			WeakPoint->SetRenderCustomDepth(true);
+			WeakPoint->SetCustomDepthStencilValue(2);
 		}
 		else
 		{
 			WeakPoint->Deactivate();
+			WeakPoint->SetRenderCustomDepth(false);
 		}
 	}
 }

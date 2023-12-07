@@ -90,15 +90,16 @@ void AChamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AChamCharacter::Dash);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AChamCharacter::Interact);
+
 		EnhancedInputComponent->BindAction(TabAction, ETriggerEvent::Started, this, &AChamCharacter::TabOn);
 		EnhancedInputComponent->BindAction(TabAction, ETriggerEvent::Completed, this, &AChamCharacter::TabOff);
 
 		EnhancedInputComponent->BindAction(HookAction, ETriggerEvent::Started, this, &AChamCharacter::Hook);
 
-
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Started, this, &AChamCharacter::AimingButtonPressed);
 		EnhancedInputComponent->BindAction(Aiming, ETriggerEvent::Completed, this, &AChamCharacter::AimingButtonReleased);
-		EnhancedInputComponent->BindAction(Cancel, ETriggerEvent::Started, this, &AChamCharacter::AimingCancel);
+		EnhancedInputComponent->BindAction(Slow, ETriggerEvent::Started, this, &AChamCharacter::SlowModeStart);
+		EnhancedInputComponent->BindAction(Slow, ETriggerEvent::Completed, this, &AChamCharacter::SlowModeEnd);
 	}
 }
 
@@ -267,7 +268,22 @@ void AChamCharacter::Dash()
 
 void AChamCharacter::Interact()
 {	
-	CheckAndGetArrow(SelectedArrow);
+	if (Camera)
+	{
+		if (bAiming)
+		{
+			bAiming = false;
+
+			if (GetCharacterMovement()->Velocity.Size() <= 0)
+			{
+				GetCharacterMovement()->bUseControllerDesiredRotation = false;
+			}
+		}
+		else
+		{
+			CheckAndGetArrow(SelectedArrow);
+		}
+	}
 }
 
 void AChamCharacter::TabOn()
@@ -276,6 +292,11 @@ void AChamCharacter::TabOn()
 		return;
 
 	bFilterOn = true;
+
+	if (ScreenFilterMaterial && Camera)
+	{
+		Camera->PostProcessSettings.AddBlendable(ScreenFilterMaterial, 1.0f);
+	}
 
 	TArray<AActor*> AllEnemyActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), AllEnemyActors);
@@ -296,11 +317,6 @@ void AChamCharacter::TabOn()
 		}
 	}
 
-	if (ScreenFilterMaterial && Camera)
-	{
-		Camera->PostProcessSettings.AddBlendable(ScreenFilterMaterial, 1.0f);
-	}
-
 	if (ArrowsInWorld.Num() > 0)
 	{
 		for (AArrow* Arrow : ArrowsInWorld)
@@ -316,6 +332,11 @@ void AChamCharacter::TabOff()
 		return;
 
 	bFilterOn = false;
+
+	if (ScreenFilterMaterial && Camera)
+	{
+		Camera->PostProcessSettings.RemoveBlendable(ScreenFilterMaterial);
+	}
 
 	TArray<AActor*> AllEnemyActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), AllEnemyActors);
@@ -334,11 +355,6 @@ void AChamCharacter::TabOff()
 				}
 			}
 		}
-	}
-
-	if (ScreenFilterMaterial && Camera)
-	{
-		Camera->PostProcessSettings.RemoveBlendable(ScreenFilterMaterial);		
 	}
 
 	if (ArrowsInWorld.Num() > 0)
@@ -422,17 +438,14 @@ void AChamCharacter::AimingButtonReleased()
 	}	
 }
 
-void AChamCharacter::AimingCancel()
+void AChamCharacter::SlowModeStart()
 {
-	if (Camera && bAiming)
-	{
-		bAiming = false;
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.5f);
+}
 
-		if (GetCharacterMovement()->Velocity.Size() <= 0)
-		{
-			GetCharacterMovement()->bUseControllerDesiredRotation = false;
-		}
-	}
+void AChamCharacter::SlowModeEnd()
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
 }
 
 void AChamCharacter::CameraInterpZoom(float DeltaTime)

@@ -74,7 +74,7 @@ protected:
 	UInputAction* Aiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* Cancel;	
+	UInputAction* Slow;	
 	/** </Enhanced Input> */
 
 	void Move(const FInputActionValue& Value);
@@ -93,7 +93,9 @@ protected:
 	/** Aiming 버튼 입력에 따라 bAiming을 true 또는 false로 변경 */
 	void AimingButtonPressed();
 	void AimingButtonReleased();
-	void AimingCancel();
+
+	void SlowModeStart();
+	void SlowModeEnd();
 
 	/** bAiming에 따라 조준 카메라 설정 */
 	void CameraInterpZoom(float DeltaTime);
