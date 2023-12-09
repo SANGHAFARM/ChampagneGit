@@ -562,35 +562,31 @@ void AChamCharacter::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			ECollisionChannel::ECC_Visibility
 		);
 
-		if (TraceHitResult.bBlockingHit)
-		{
-			if (TraceHitResult.GetActor())
-			{
-				if (TraceHitResult.GetActor()->Implements<UEnemyInterface>())
-				{
-					HUDPackage.CrosshairsColor = FLinearColor::Red;
-				}
-				else
-				{					
-					HUDPackage.CrosshairsColor = FLinearColor::White;												
-
-					if (AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor()))
-					{
-						TracingArrow(ArrowActor);
-					}
-				}				
-			}	
-
-			HitTarget = TraceHitResult.ImpactPoint;
-		}
-		else
+		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
 			HitTarget = End;
 			HUDPackage.CrosshairsColor = FLinearColor::White;
 		}
+		else
+		{
+			AArrow* ArrowActor = Cast<AArrow>(TraceHitResult.GetActor());
 
-		DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
+			TracingArrow(ArrowActor);
+
+			if (TraceHitResult.GetActor()->Implements<UEnemyInterface>())
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::Red;
+			}		
+			else
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::White;
+			}
+
+			HitTarget = TraceHitResult.ImpactPoint;
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
+			UE_LOG(LogTemp, Warning, TEXT("Actor Name : %s"), *TraceHitResult.GetActor()->GetName());
+		}
 	}
 }
 

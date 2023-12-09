@@ -12,6 +12,9 @@ AEnemy::AEnemy()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	WeakPointMark = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeakPointMesh"));
+	WeakPointMark->SetupAttachment(GetRootComponent());
+	WeakPointMark->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called every frame
@@ -25,42 +28,39 @@ void AEnemy::Tick(float DeltaTime)
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (WeakPointMark)
+	{
+		WeakPointMark->SetHiddenInGame(true);
+	}	
 	
 	if (!ValidWeakBones.IsEmpty())
 	{
 		int32 RandIdx = FMath::RandRange(0, ValidWeakBones.Num() - 1);
 		WeakBone = ValidWeakBones[RandIdx];
-		
+		WeakBoneIdx = GetMesh()->GetBoneIndex(WeakBone);
+				
 		if (WeakBone.IsValid())
 		{
-			WeakPoint = UNiagaraFunctionLibrary::SpawnSystemAttached(
-				WeakPointEffect,
-				GetMesh(),
-				WeakBone,
-				FVector::ZeroVector,
-				FRotator::ZeroRotator,
-				EAttachLocation::SnapToTarget,
-				false,
-				false
-			);
+			WeakPointMark->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeakBone);
 		}		
 	}
 }
 
 void AEnemy::ShowWeakPoint(bool bShow)
 {
-	if (WeakPoint)
+	if (WeakPointMark)
 	{
 		if (bShow)
 		{
-			WeakPoint->Activate();
-			WeakPoint->SetRenderCustomDepth(true);
-			WeakPoint->SetCustomDepthStencilValue(2);
+			WeakPointMark->SetHiddenInGame(false);
+			WeakPointMark->SetRenderCustomDepth(true);
+			WeakPointMark->SetCustomDepthStencilValue(2);
 		}
 		else
 		{
-			WeakPoint->Deactivate();
-			WeakPoint->SetRenderCustomDepth(false);
+			WeakPointMark->SetRenderCustomDepth(false);
+			WeakPointMark->SetHiddenInGame(true);
 		}
 	}
 }
