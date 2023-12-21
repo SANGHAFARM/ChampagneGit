@@ -7,7 +7,6 @@
 #include "Interfaces/PickUpInterface.h"
 #include "Arrow.generated.h"
 
-class UStaticMeshComponent;
 class UProjectileMovementComponent;
 class UBoxComponent;
 class USphereComponent;

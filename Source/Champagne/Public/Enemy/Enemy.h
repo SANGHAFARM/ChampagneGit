@@ -35,11 +35,17 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	FName WeakBone;
 
-	UPROPERTY(EditAnywhere, Category = Effect)
-	UNiagaraSystem* WeakPointEffect;
+	UPROPERTY(VisibleAnywhere)
+	int32 WeakBoneIdx;
 
-	UPROPERTY(VisibleAnywhere, Category = Effect)
-	UNiagaraComponent* WeakPoint;
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* WeakPointMark;
+
+	UPROPERTY(VisibleAnywhere)
+	UMaterialInterface* DefaultMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* WeakMaterial;
 
 public:
 	FORCEINLINE FName GetWeakBone() { return WeakBone; }
